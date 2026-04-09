@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Allow read access for authenticated users (to view book/profile images)
+    match /{allPaths=**} {
+      allow read: if isAuthenticated();
+    }
+
+    // Restrict write access (upload/delete) to user-specific folders
+    match /users/{userId}/{allPaths=**} {
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Restrict write access to book-specific folders
+    match /books/{bookId}/{allPaths=**} {
+      // (This assumes the client-side code will upload book images here)
+      // Ideally, we'd check if the user is the publisher of this book, 
+      // but for now, basic authentication check is a good starting point.
+      allow write: if isAuthenticated();
+    }
+  }
+}

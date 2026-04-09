@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحقق من الحساب | MBYB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            --success: #059669;
+            --error: #ef4444;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans Arabic', 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        p {
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #94a3b8;
+        }
+
+        .status {
+            margin-top: 24px;
+            padding: 16px;
+            border-radius: 12px;
+            display: none;
+            font-weight: 600;
+        }
+
+        .status.success {
+            display: block;
+            background: #ecfdf5;
+            color: var(--success);
+            border: 1px solid #10b98133;
+        }
+
+        .status.error {
+            display: block;
+            background: #fef2f2;
+            color: var(--error);
+            border: 1px solid #ef444433;
+        }
+
+        .loader {
+            width: 24px;
+            height: 24px;
+            border: 3px solid #ffffff33;
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: none;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading .loader { display: block; }
+        .loading .btn-text { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="logo">MBYB</div>
+        <div id="initial-step">
+            <h1>تحقق من حسابك</h1>
+            <p>يرجى النقر على الزر أدناه لتأكيد بريدك الإلكتروني وتفعيل حسابك في تطبيق MBYB.</p>
+            <button id="verify-btn" class="btn">
+                <span class="btn-text">تأكيد البريد الإلكتروني</span>
+                <div class="loader"></div>
+            </button>
+        </div>
+
+        <div id="status-box" class="status"></div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getAuth, applyActionCode } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        // Firebase configuration (extracted from project files)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAc8a4UaajVAf6qXSNmEy14L6BzVlm-Lc8",
+            authDomain: "mbyb-4e6c8.firebaseapp.com",
+            projectId: "mbyb-4e6c8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        const verifyBtn = document.getElementById('verify-btn');
+        const initialStep = document.getElementById('initial-step');
+        const statusBox = document.getElementById('status-box');
+
+        // Extract oobCode from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const oobCode = urlParams.get('oobCode');
+
+        verifyBtn.addEventListener('click', async () => {
+            if (!oobCode) {
+                showStatus('كود التحقق مفقود. يرجى استخدام الرابط الأصلي من البريد.', 'error');
+                return;
+            }
+
+            verifyBtn.classList.add('loading');
+            verifyBtn.disabled = true;
+
+            try {
+                await applyActionCode(auth, oobCode);
+                initialStep.style.display = 'none';
+                showStatus('تم التحقق بنجاح! يمكنك الآن العودة إلى التطبيق وتسجيل الدخول.', 'success');
+            } catch (error) {
+                console.error(error);
+                let message = 'حدث خطأ أثناء التحقق. قد يكون الرابط قد انتهى أو تم استخدامه مسبقاً.';
+                if (error.code === 'auth/invalid-action-code') {
+                    message = 'كود التحقق غير صالح أو منتهي الصلاحية.';
+                }
+                showStatus(message, 'error');
+                verifyBtn.classList.remove('loading');
+                verifyBtn.disabled = false;
+            }
+        });
+
+        function showStatus(text, type) {
+            statusBox.textContent = text;
+            statusBox.className = `status ${type}`;
+        }
+    </script>
+</body>
+</html>
