@@ -5,10 +5,10 @@ import 'auth_provider.dart';
 /// Admin status is determined by the specific email address 'solosoulacc@tutamail.com'.
 final isAdminProvider = Provider<bool>((ref) {
   final authState = ref.watch(authStateProvider);
-  
+
   return authState.when(
     data: (user) => user?.email == 'solosoulacc@tutamail.com',
     loading: () => false,
-    error: (_, __) => false,
+    error: (_, _) => false,
   );
 });

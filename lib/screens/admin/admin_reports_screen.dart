@@ -406,6 +406,39 @@ class AdminReportsScreen extends ConsumerWidget {
             }
 
             if (snapshot.hasError) {
+              final errorMsg = snapshot.error.toString();
+              final isIndexBuilding = errorMsg.contains('FAILED_PRECONDITION') || 
+                                     errorMsg.contains('index');
+              
+              if (isIndexBuilding) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.hourglass_empty_outlined, size: 48, color: Colors.orange),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'جاري بناء الفهرس',
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'يتم حالياً بناء فهرس قاعدة البيانات.\nيرجى الانتظار بضع دقائق ثم حاول مرة أخرى.',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('العودة'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              
               return Center(
                 child: Text('خطأ في تحميل التقارير: ${snapshot.error}'),
               );

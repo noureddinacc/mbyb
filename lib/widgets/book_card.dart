@@ -54,78 +54,82 @@ class BookCard extends ConsumerWidget {
                             ),
                           ),
                         ],
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 238, 238, 238),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(top: 1.0),
-                                child: Icon(
-                                  BookIcons.getConditionIcon(book.condition),
-                                  size: 14,
-                                  color: const Color.fromARGB(255, 77, 76, 76),
+                        if (book.postType != 'request') ...[
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 238, 238, 238),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 1.0),
+                                  child: Icon(
+                                    BookIcons.getConditionIcon(book.condition),
+                                    size: 14,
+                                    color: const Color.fromARGB(255, 77, 76, 76),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  'الحالة: ${book.condition}',
-                                  style: const TextStyle(
-                                    fontSize: 12,
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    'الحالة: ${book.condition}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color.fromARGB(255, 77, 76, 76),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 3,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (book.faculty.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: const Color.fromARGB(255, 238, 238, 238),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 1.0),
+                                  child: Icon(
+                                    Icons.school,
+                                    size: 14,
                                     color: Color.fromARGB(255, 77, 76, 76),
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 3,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 238, 238, 238),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Padding(
-                                padding: EdgeInsets.only(top: 1.0),
-                                child: Icon(
-                                  Icons.school,
-                                  size: 14,
-                                  color: Color.fromARGB(255, 77, 76, 76),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  book.faculty,
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Color.fromARGB(255, 77, 76, 76),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    book.faculty,
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color.fromARGB(255, 77, 76, 76),
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 3,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 3,
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -348,7 +352,7 @@ class BookCard extends ConsumerWidget {
                   ),
                 ),
               ],
-              if (book.isExchange && book.exchangeDetails != null) ...[
+              if (book.postType == 'exchange' && book.exchangeDetails != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
@@ -376,7 +380,26 @@ class BookCard extends ConsumerWidget {
                     ],
                   ),
                 ),
-              ] else if (!book.isExchange) ...[
+              ] else if (book.postType == 'request') ...[
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.purple[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    'مطلوب',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.purple[700],
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ] else if (book.postType == 'free') ...[
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
@@ -403,8 +426,8 @@ class BookCard extends ConsumerWidget {
                     currentUser == null || currentUser.uid == book.publisherId
                     ? ElevatedButton.icon(
                         onPressed: null,
-                        icon: const Icon(Icons.send),
-                        label: const Text('طلب'),
+                        icon: Icon(book.postType == 'request' ? Icons.check_circle : Icons.send),
+                        label: Text(book.postType == 'request' ? 'لدي هذا الكتاب' : 'طلب'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey,
                           foregroundColor: Colors.white,
@@ -445,6 +468,7 @@ class BookCard extends ConsumerWidget {
                                     requesterStudentId:
                                         currentUser.email?.split('@')[0] ??
                                         'Unknown',
+                                    postType: book.postType,
                                   );
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context)
@@ -473,9 +497,9 @@ class BookCard extends ConsumerWidget {
                               }
                             },
                             icon: Icon(
-                              hasRequested ? Icons.cancel : Icons.send,
+                              hasRequested ? Icons.cancel : (book.postType == 'request' ? Icons.check_circle : Icons.send),
                             ),
-                            label: Text(hasRequested ? 'إلغاء الطلب' : 'طلب'),
+                            label: Text(hasRequested ? 'إلغاء الطلب' : (book.postType == 'request' ? 'لدي هذا الكتاب' : 'طلب')),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: hasRequested
                                   ? Colors.orange

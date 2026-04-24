@@ -12,7 +12,7 @@ class BookService {
     required String faculty,
     required String description,
     required String condition,
-    required bool isExchange,
+    required String postType,
     String? exchangeDetails,
   }) async {
     try {
@@ -24,7 +24,7 @@ class BookService {
         'faculty': faculty,
         'description': description,
         'condition': condition,
-        'isExchange': isExchange,
+        'postType': postType,
         'exchangeDetails': exchangeDetails,
         'status': 'Available',
         'createdAt': now,

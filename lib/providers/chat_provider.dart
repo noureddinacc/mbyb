@@ -7,7 +7,7 @@ import 'auth_provider.dart';
 final userChatsProvider = StreamProvider<List<ChatModel>>((ref) {
   final chatService = ref.watch(chatServiceProvider);
   final userAsyncValue = ref.watch(authStateProvider);
-  
+
   return userAsyncValue.when(
     data: (user) {
       if (user == null) {
@@ -16,11 +16,14 @@ final userChatsProvider = StreamProvider<List<ChatModel>>((ref) {
       return chatService.getUserChats(user.uid);
     },
     loading: () => Stream.value([]),
-    error: (_, __) => Stream.value([]),
+    error: (_, _) => Stream.value([]),
   );
 });
 
-final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((ref, chatId) {
+final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((
+  ref,
+  chatId,
+) {
   final chatService = ref.watch(chatServiceProvider);
   return chatService.getChatMessages(chatId);
 });
@@ -28,7 +31,7 @@ final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((r
 final archivedChatsProvider = StreamProvider<List<ChatModel>>((ref) {
   final chatService = ref.watch(chatServiceProvider);
   final userAsyncValue = ref.watch(authStateProvider);
-  
+
   return userAsyncValue.when(
     data: (user) {
       if (user == null) {
@@ -37,6 +40,6 @@ final archivedChatsProvider = StreamProvider<List<ChatModel>>((ref) {
       return chatService.getArchivedChats(user.uid);
     },
     loading: () => Stream.value([]),
-    error: (_, __) => Stream.value([]),
+    error: (_, _) => Stream.value([]),
   );
 });

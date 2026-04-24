@@ -13,7 +13,7 @@ import 'package:flutter/foundation.dart';
 
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this.ref) {
-    ref.listen(authStateProvider, (_, __) => notifyListeners());
+    ref.listen(authStateProvider, (_, _) => notifyListeners());
   }
   final Ref ref;
 }
@@ -26,13 +26,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
-      
+
       if (authState.isLoading) return null; // Wait until init finishes
-      
+
       final user = authState.value;
       final isAuth = user != null;
       final isVerified = user?.emailVerified ?? false;
-      final isLoggingIn = state.uri.path == '/login' || state.uri.path == '/signup';
+      final isLoggingIn =
+          state.uri.path == '/login' || state.uri.path == '/signup';
 
       if (!isAuth || !isVerified) {
         // Redirect to login if not authenticated OR not verified
@@ -46,19 +47,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
       ),
 
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const MainScreen(),
-      ),
+      GoRoute(path: '/home', builder: (context, state) => const MainScreen()),
       GoRoute(
         path: '/archived-chats',
         builder: (context, state) => const ArchivedChatsScreen(),

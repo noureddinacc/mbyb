@@ -79,7 +79,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   child: Icon(Icons.person, color: Colors.white),
                 ),
                 title: Text(
-                  'طلب ${req.requesterStudentId} كتاب "${req.bookTitle}"',
+                  req.postType == 'request' 
+                      ? 'عرض ${req.requesterStudentId} تزويدك بكتاب "${req.bookTitle}"'
+                      : 'طلب ${req.requesterStudentId} كتاب "${req.bookTitle}"',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
@@ -271,7 +273,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   child: Icon(Icons.outbox, color: Colors.white),
                 ),
                 title: Text(
-                  'لقد طلبت كتاب "${req.bookTitle}"',
+                  req.postType == 'request'
+                      ? 'لقد عرضت تزويد كتاب "${req.bookTitle}"'
+                      : 'لقد طلبت كتاب "${req.bookTitle}"',
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(

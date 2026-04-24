@@ -4,6 +4,7 @@ import 'package:intl/intl.dart' hide TextDirection;
 import '../../providers/service_providers.dart';
 import '../../services/report_service.dart';
 import '../../services/book_service.dart';
+import '../../models/book.dart';
 
 class BlockedUsersScreen extends ConsumerWidget {
   const BlockedUsersScreen({super.key});
@@ -53,7 +54,16 @@ class BlockedUsersScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final user = blockedUsers[index];
                 final uid = user['uid'] as String;
-                final studentId = user['studentID'] as String? ?? 'غير معروف';
+                final email = user['email'] as String?;
+                
+                String studentId = 'غير معروف';
+                if (user['studentID'] != null && user['studentID'].toString().isNotEmpty) {
+                  studentId = user['studentID'];
+                } else if (email != null && email.isNotEmpty) {
+                  studentId = email.split('@').first;
+                } else {
+                  studentId = uid;
+                }
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -75,31 +85,63 @@ class BlockedUsersScreen extends ConsumerWidget {
                             ),
                             const SizedBox(height: 8),
                             // Fetch reports for this specific user
-                            StreamBuilder<List<Map<String, dynamic>>>(
-                              stream: reportService.getAllReports(),
-                              builder: (context, reportSnapshot) {
-                                if (reportSnapshot.connectionState == ConnectionState.waiting) {
+                            StreamBuilder<List<BookModel>>(
+                              stream: bookService.getBooksByPublisher(uid),
+                              builder: (context, booksSnapshot) {
+                                if (booksSnapshot.connectionState == ConnectionState.waiting) {
                                   return const Center(child: CircularProgressIndicator());
                                 }
                                 
-                                final allReports = reportSnapshot.data ?? [];
-                                final userReports = allReports.where((r) => r['targetId'] == uid).toList();
-
-                                if (userReports.isEmpty) {
-                                  return const Text('لا توجد تقارير مسجلة حالياً.');
-                                }
-
-                                return Column(
-                                  children: userReports.map((report) {
-                                    final date = (report['timestamp'] as dynamic)?.toDate() ?? DateTime.now();
-                                    return ListTile(
-                                      title: Text(report['reason'] ?? 'بدون سبب'),
-                                      subtitle: Text(DateFormat('yyyy/MM/dd').format(date)),
-                                      dense: true,
+                                if (booksSnapshot.hasError) {
+                                  final errorMsg = booksSnapshot.error.toString();
+                                  if (errorMsg.contains('FAILED_PRECONDITION') || 
+                                      errorMsg.contains('index')) {
+                                    return const Text(
+                                      'جاري بناء فهرس قاعدة البيانات... يرجى الانتظار بضع دقائق.',
+                                      style: TextStyle(color: Colors.orange, fontSize: 12),
                                     );
-                                  }).toList(),
+                                  }
+                                  return Text('خطأ في تحميل الكتب: ${booksSnapshot.error}');
+                                }
+                                
+                                final userBooks = booksSnapshot.data ?? [];
+                                final bookIds = userBooks.map((b) => b.id).toSet();
+
+                                return StreamBuilder<List<Map<String, dynamic>>>(
+                                  stream: reportService.getAllReports(),
+                                  builder: (context, reportSnapshot) {
+                                    if (reportSnapshot.connectionState == ConnectionState.waiting) {
+                                      return const Center(child: CircularProgressIndicator());
+                                    }
+                                    
+                                    final allReports = reportSnapshot.data ?? [];
+                                    final userReports = allReports.where((r) {
+                                      if (r['targetType'] == 'user') {
+                                        return r['targetId'] == uid;
+                                      } else if (r['targetType'] == 'book') {
+                                        return bookIds.contains(r['targetId']);
+                                      }
+                                      return false;
+                                    }).toList();
+
+                                    if (userReports.isEmpty) {
+                                      return const Text('لا توجد تقارير مسجلة حالياً.');
+                                    }
+
+                                    return Column(
+                                      children: userReports.map((report) {
+                                        final date = (report['timestamp'] as dynamic)?.toDate() ?? DateTime.now();
+                                        final targetTypeStr = report['targetType'] == 'user' ? 'شخصي' : 'إعلان كتاب';
+                                        return ListTile(
+                                          title: Text('${report['reason'] ?? 'بدون سبب'} ($targetTypeStr)'),
+                                          subtitle: Text(DateFormat('yyyy/MM/dd hh:mm a').format(date)),
+                                          dense: true,
+                                        );
+                                      }).toList(),
+                                    );
+                                  },
                                 );
-                              },
+                              }
                             ),
                             const Divider(height: 32),
                             SizedBox(

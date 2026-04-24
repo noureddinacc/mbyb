@@ -6,7 +6,7 @@ class BookModel {
   final String faculty;
   final String description;
   final String condition; // "Like New", "Good", "Fair", "Poor"
-  final bool isExchange;
+  final String postType; // "free", "exchange", "request"
   final String? exchangeDetails;
   final String status; // "Available" or "Accepted"
   final DateTime createdAt;
@@ -19,7 +19,7 @@ class BookModel {
     required this.faculty,
     required this.description,
     required this.condition,
-    this.isExchange = false,
+    this.postType = 'free',
     this.exchangeDetails,
     this.status = 'Available',
     required this.createdAt,
@@ -35,7 +35,7 @@ class BookModel {
       'faculty': faculty,
       'description': description,
       'condition': condition,
-      'isExchange': isExchange,
+      'postType': postType,
       'exchangeDetails': exchangeDetails,
       'status': status,
       'createdAt': createdAt,
@@ -52,7 +52,7 @@ class BookModel {
       faculty: map['faculty'] ?? '',
       description: map['description'] ?? '',
       condition: map['condition'] ?? 'Good',
-      isExchange: map['isExchange'] ?? false,
+      postType: map['postType'] ?? (map['isExchange'] == true ? 'exchange' : 'free'),
       exchangeDetails: map['exchangeDetails'],
       status: map['status'] ?? 'Available',
       createdAt: (map['createdAt'] as dynamic)?.toDate() ?? DateTime.now(),

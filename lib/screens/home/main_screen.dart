@@ -68,56 +68,112 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       'كلية العلوم الطبية التطبيقية',
       'كلية التعليم الفني',
     ];
-    final selectedFaculty = ref.read(facultyFilterProvider);
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
       builder: (ctx) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'تصفية حسب الكلية',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                DropdownButtonFormField<String>(
-                  value: selectedFaculty,
-                  isExpanded: true,
-                  hint: const Text('جميع الكليات'),
-                  items: [
-                    const DropdownMenuItem(
-                      value: null,
-                      child: Text('جميع الكليات'),
+        return Consumer(
+          builder: (context, ref, child) {
+            final selectedFaculty = ref.watch(facultyFilterProvider);
+            final selectedPostType = ref.watch(postTypeFilterProvider);
+
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'تصفية',
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
-                    ...faculties.map((faculty) {
-                      return DropdownMenuItem(
-                        value: faculty,
-                        child: Text(faculty, overflow: TextOverflow.ellipsis),
-                      );
-                    }),
+                    const SizedBox(height: 20),
+                    DropdownButtonFormField<String>(
+                      value: selectedFaculty,
+                      isExpanded: true,
+                      hint: const Text('جميع الكليات'),
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('جميع الكليات'),
+                        ),
+                        ...faculties.map((faculty) {
+                          return DropdownMenuItem(
+                            value: faculty,
+                            child: Text(faculty, overflow: TextOverflow.ellipsis),
+                          );
+                        }),
+                      ],
+                      onChanged: (value) {
+                        ref.read(facultyFilterProvider.notifier).setFilter(value);
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'الكلية',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.school_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: selectedPostType,
+                      isExpanded: true,
+                      hint: const Text('جميع الأنواع'),
+                      items: const [
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text('جميع الأنواع'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'free',
+                          child: Text('مجاني'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'exchange',
+                          child: Text('للمبادلة'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'request',
+                          child: Text('مطلوب'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        ref.read(postTypeFilterProvider.notifier).setFilter(value);
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'نوع المنشور',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.category_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text('تطبيق'),
+                      ),
+                    ),
                   ],
-                  onChanged: (value) {
-                    ref.read(facultyFilterProvider.notifier).setFilter(value);
-                    Navigator.pop(ctx);
-                  },
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    prefixIcon: const Icon(Icons.school_outlined),
-                  ),
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
@@ -215,8 +271,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             IconButton(
               icon: Icon(
-                selectedFaculty == null ? Icons.filter_alt_outlined : Icons.filter_alt,
-                color: selectedFaculty == null ? null : Colors.green,
+                (selectedFaculty == null && ref.watch(postTypeFilterProvider) == null) 
+                    ? Icons.filter_alt_outlined 
+                    : Icons.filter_alt,
+                color: (selectedFaculty == null && ref.watch(postTypeFilterProvider) == null) 
+                    ? null 
+                    : Colors.green,
               ),
               onPressed: _showFilterBottomSheeet,
             ),

@@ -45,7 +45,7 @@ class _PostScreenState extends State<PostScreen> {
   bool _isLoading = false;
   String? _errorMessage;
 
-  final List<String> _conditions = ['جديد بحالة ممتازة', 'جيد', 'مقبول', 'سيء'];
+  final List<String> _conditions = ['جديد بحالة ممتازة', 'جيد', 'مقبول', 'سيء', 'غير محدد'];
   final int _titleMaxLength = 50;
   final int _authorMaxLength = 50;
   final int _exchangeDetailsMaxLength = 150;
@@ -79,8 +79,8 @@ class _PostScreenState extends State<PostScreen> {
           author: _authorController.text.trim(),
           faculty: _selectedFaculty!,
           description: _descriptionController.text.trim(),
-          condition: _conditionController.text,
-          isExchange: _bookType == 'exchange',
+          condition: _bookType == 'request' ? 'غير محدد' : _conditionController.text,
+          postType: _bookType,
           exchangeDetails: _bookType == 'exchange'
               ? _exchangeDetailsController.text.trim()
               : null,
@@ -147,6 +147,48 @@ class _PostScreenState extends State<PostScreen> {
                         ),
                       ),
                     if (_errorMessage != null) const SizedBox(height: 16),
+                    const Text(
+                      'نوع المنشور',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    RadioListTile<String>(
+                      title: const Text('أعرض كتاباً مجانياً'),
+                      value: 'free',
+                      groupValue: _bookType,
+                      onChanged: (value) {
+                        setState(() {
+                          _bookType = value ?? 'free';
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('أعرض كتاباً للمبادلة'),
+                      value: 'exchange',
+                      groupValue: _bookType,
+                      onChanged: (value) {
+                        setState(() {
+                          _bookType = value ?? 'free';
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    RadioListTile<String>(
+                      title: const Text('أطلب كتاباً'),
+                      value: 'request',
+                      groupValue: _bookType,
+                      onChanged: (value) {
+                        setState(() {
+                          _bookType = value ?? 'free';
+                        });
+                      },
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 16),
                     DropdownButtonFormField(
                       initialValue: _selectedFaculty,
                       isExpanded: true,
@@ -225,7 +267,7 @@ class _PostScreenState extends State<PostScreen> {
                       maxLines: 3,
                       maxLength: 150,
                       decoration: InputDecoration(
-                        labelText: 'وصف الكتاب',
+                        labelText: 'وصف الكتاب (اختياري)',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -236,86 +278,55 @@ class _PostScreenState extends State<PostScreen> {
                         helperText: 'الحد الأقصى 150 حرفاً',
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'الوصف مطلوب';
-                        }
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
-                    DropdownButtonFormField(
-                      initialValue: _conditionController.text.isEmpty
-                          ? null
-                          : _conditionController.text,
-                      items: _conditions.map((condition) {
-                        return DropdownMenuItem(
-                          value: condition,
-                          child: Row(
-                            children: [
-                              Icon(
-                                BookIcons.getConditionIcon(condition),
-                                size: 18,
-                                color: Colors.grey[700],
-                              ),
-                              const SizedBox(width: 8),
-                              Text(condition),
-                            ],
+                    if (_bookType != 'request') ...[
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField(
+                        initialValue: _conditionController.text.isEmpty
+                            ? null
+                            : _conditionController.text,
+                        items: _conditions.map((condition) {
+                          return DropdownMenuItem(
+                            value: condition,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  BookIcons.getConditionIcon(condition),
+                                  size: 18,
+                                  color: Colors.grey[700],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(condition),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _conditionController.text = value ?? '';
+                          });
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'حالة الكتاب',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                        );
-                      }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _conditionController.text = value ?? '';
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'حالة الكتاب',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                        validator: (value) {
+                          if (_bookType != 'request' && (value == null || value.isEmpty)) {
+                            return 'يرجى اختيار حالة الكتاب';
+                          }
+                          return null;
+                        },
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'يرجى اختيار حالة الكتاب';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'نوع الكتاب',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    RadioListTile<String>(
-                      title: const Text('مجاني'),
-                      value: 'free',
-                      groupValue: _bookType,
-                      onChanged: (value) {
-                        setState(() {
-                          _bookType = value ?? 'free';
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('للمبادلة'),
-                      value: 'exchange',
-                      groupValue: _bookType,
-                      onChanged: (value) {
-                        setState(() {
-                          _bookType = value ?? 'free';
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
+                    ],
+
                     if (_bookType == 'exchange') ...[
                       const SizedBox(height: 16),
                       TextFormField(

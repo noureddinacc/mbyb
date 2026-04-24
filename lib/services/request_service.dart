@@ -11,6 +11,7 @@ class RequestService {
     required String requesterId,
     required String requesterStudentId,
     required String publisherId,
+    required String postType,
     String? message,
   }) async {
     try {
@@ -25,6 +26,7 @@ class RequestService {
         'timestamp': now,
         'message': message,
         'status': 'pending',
+        'postType': postType,
       };
 
       await _firestore.collection('requests').add(requestData);
