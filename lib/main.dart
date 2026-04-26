@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'providers/theme_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'providers/theme_provider.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'firebase_options.dart';
 import 'core/theme/app_theme.dart';
@@ -14,9 +14,13 @@ void main() async {
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   
   try {
-    // Initialize Firebase and SharedPreferences sequentially for better stability on web
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    final prefs = await SharedPreferences.getInstance();
+    // Initialize Firebase and SharedPreferences in parallel for speed
+    final results = await Future.wait([
+      Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+      SharedPreferences.getInstance(),
+    ]);
+
+    final prefs = results[1] as SharedPreferences;
 
     runApp(
       ProviderScope(
@@ -30,7 +34,6 @@ void main() async {
   } catch (e) {
     debugPrint("Initialization error: $e");
   } finally {
-    // Always remove the splash screen even if initialization fails
     FlutterNativeSplash.remove();
   }
 }

@@ -11,14 +11,14 @@ import 'requests_screen.dart';
 import 'chats_screen.dart';
 import 'rules_screen.dart';
 import 'blocked_screen.dart';
+import 'my_posts_screen.dart';
 import '../../providers/service_providers.dart';
 import '../../providers/book_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../admin/admin_reports_screen.dart';
 import 'system_messages_screen.dart';
-import 'my_posts_screen.dart';
-import '../../providers/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -72,8 +72,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     ];
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return Consumer(
@@ -199,7 +199,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           return const BlockedScreen();
         }
         
-        // Wrap with TabController specifically for RequestsScreen (index 2)
         return DefaultTabController(
           length: 2,
           child: _buildMainScaffold(currentUser),
@@ -218,7 +217,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ? Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Theme.of(context).brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
@@ -227,7 +226,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     onChanged: (val) {
                       ref.read(searchQueryProvider.notifier).setQuery(val);
                     },
-                    style: const TextStyle(color: Colors.black, fontSize: 14),
+                    style: TextStyle(color: Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'بحث...',
                       border: InputBorder.none,
@@ -289,11 +288,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       case 2: // Requests
         return AppBar(
           title: const Text('الطلبات'),
-          bottom: const TabBar(
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
-            tabs: [
+          bottom: TabBar(
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Theme.of(context).colorScheme.primary,
+            indicatorWeight: 3,
+            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 15),
+            tabs: const [
               Tab(text: 'المستلمة'),
               Tab(text: 'المرسلة'),
             ],
@@ -390,7 +392,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             icon: Icons.home_rounded,
             label: 'الرئيسية',
             color: Colors.teal,
-            isSelected: false,
+            isSelected: _selectedIndex == 0,
             showBackground: false,
             onTap: () {
               Navigator.pop(context);
@@ -521,7 +523,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             color: showBackground ? color.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: isSelected ? color : (isDark ? Colors.grey[400] : color), size: 20),
         ),
         title: Text(
           label,
@@ -537,12 +539,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       ),
     );
   }
+
   Widget _buildMainScaffold(dynamic currentUser) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: _buildAppBar(currentUser),
-        drawer: _selectedIndex == 0 ? _buildDrawer(currentUser) : null,
+        drawer: _buildDrawer(currentUser), // Enabled drawer for all screens for easy theme access
         body: IndexedStack(
           index: _selectedIndex,
           children: _screens,
@@ -553,16 +556,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           type: BottomNavigationBarType.fixed,
           items: [
             const BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
               label: 'الرئيسية',
             ),
             const BottomNavigationBarItem(
               icon: Icon(Icons.add_circle_outline),
+              activeIcon: Icon(Icons.add_circle),
               label: 'نشر',
             ),
             BottomNavigationBarItem(
               icon: currentUser == null
-                  ? const Icon(Icons.notifications)
+                  ? const Icon(Icons.notifications_outlined)
                   : StreamBuilder<List<RequestModel>>(
                       stream: RequestService().getIncomingRequests(
                         currentUser.uid,
@@ -573,15 +578,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           isLabelVisible: count > 0,
                           label: Text(count.toString()),
                           backgroundColor: Colors.red,
-                          child: const Icon(Icons.notifications),
+                          child: const Icon(Icons.notifications_outlined),
                         );
                       },
                     ),
+              activeIcon: const Icon(Icons.notifications),
               label: 'الطلبات',
             ),
             BottomNavigationBarItem(
               icon: currentUser == null
-                  ? const Icon(Icons.chat)
+                  ? const Icon(Icons.chat_outlined)
                   : StreamBuilder<List<ChatModel>>(
                       stream: ChatService().getActiveChats(currentUser.uid),
                       builder: (context, snapshot) {
@@ -592,19 +598,21 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                                 return chat.updatedAt.isAfter(lastSeen);
                               }).length
                             : 0;
-
+ 
                         return Badge(
                           isLabelVisible: unreadCount > 0,
                           label: Text(unreadCount.toString()),
                           backgroundColor: Colors.red,
-                          child: const Icon(Icons.chat),
+                          child: const Icon(Icons.chat_outlined),
                         );
                       },
                     ),
+              activeIcon: const Icon(Icons.chat),
               label: 'المحادثات',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.info),
+              icon: Icon(Icons.info_outline),
+              activeIcon: Icon(Icons.info),
               label: 'الإرشادات',
             ),
           ],

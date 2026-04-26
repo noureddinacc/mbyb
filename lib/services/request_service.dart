@@ -96,7 +96,7 @@ class RequestService {
       }
       await batch.commit();
 
-      // 4. Create a chat — store student IDs so thread screen can show them without lookups
+      // 4. Create a chat — store student IDs and book info so UI can show them without lookups
       final chatRef = await _firestore.collection('chats').add({
         'participantIds': [publisherId, request.requesterId],
         'participantStudentIds': {
@@ -104,6 +104,8 @@ class RequestService {
           request.requesterId: request.requesterStudentId,
         },
         'bookId': request.bookId,
+        'bookTitle': request.bookTitle,
+        'postType': request.postType,
         'updatedAt': DateTime.now(),
         'lastMessage': 'Request Accepted! Say Hi.',
         'isClosed': false,

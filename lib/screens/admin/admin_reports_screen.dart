@@ -19,69 +19,135 @@ class AdminReportsScreen extends ConsumerWidget {
   ) {
     final chatService = ref.read(chatServiceProvider);
     final authService = ref.read(authServiceProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: const Text('سجل الدردشة (آخر 20 رسالة)'),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 400,
-            child: StreamBuilder<List<ChatMessage>>(
-              stream: chatService.getChatMessages(chatId),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+        child: Dialog(
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 600, maxWidth: 400),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: isDark ? Colors.green[900]!.withValues(alpha: 0.3) : Colors.green[50],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(Icons.forum_rounded, color: isDark ? Colors.green[300] : Colors.green[700], size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      'سجل المحادثة',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900, 
+                        fontSize: 18,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: StreamBuilder<List<ChatMessage>>(
+                    stream: chatService.getChatMessages(chatId),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
 
-                final messages = snapshot.data ?? [];
-                if (messages.isEmpty) {
-                  return const Center(
-                    child: Text('لا توجد رسائل في هذه المحادثة.'),
-                  );
-                }
+                      final messages = snapshot.data ?? [];
+                      if (messages.isEmpty) {
+                        return const Center(child: Text('لا توجد رسائل في هذه المحادثة.', style: TextStyle(color: Colors.grey)));
+                      }
 
-                return ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: messages.length > 20 ? 20 : messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    return FutureBuilder<String?>(
-                      future: authService.getStudentIdFromUid(msg.senderId),
-                      builder: (context, userSnapshot) {
-                        final senderId = userSnapshot.data ?? msg.senderId;
-                        return ListTile(
-                          title: Text(
-                            senderId,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
+                      return ListView.builder(
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final msg = messages[index];
+                          final bool isAlternativeSender = index % 2 == 0; 
+                          
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6.0),
+                            child: Column(
+                              crossAxisAlignment: isAlternativeSender ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                              children: [
+                                FutureBuilder<String?>(
+                                  future: authService.getStudentIdFromUid(msg.senderId),
+                                  builder: (context, userSnapshot) {
+                                    return Text(
+                                      userSnapshot.data ?? 'مستخدم',
+                                      style: TextStyle(
+                                        fontSize: 10, 
+                                        fontWeight: FontWeight.bold,
+                                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                      ),
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isAlternativeSender 
+                                        ? (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100]) 
+                                        : (isDark ? Colors.teal[700] : Colors.green[700]),
+                                    borderRadius: BorderRadius.circular(16).copyWith(
+                                      bottomRight: isAlternativeSender ? const Radius.circular(16) : Radius.zero,
+                                      bottomLeft: isAlternativeSender ? Radius.zero : const Radius.circular(16),
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        msg.text,
+                                        style: TextStyle(
+                                          color: isAlternativeSender ? (isDark ? Colors.white : Colors.black87) : Colors.white,
+                                          fontSize: 14,
+                                          height: 1.4,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        DateFormat('hh:mm a').format(msg.sentAt),
+                                        style: TextStyle(
+                                          fontSize: 9,
+                                          color: isAlternativeSender ? Colors.grey[500] : Colors.green[100],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          subtitle: Text(msg.text),
-                          trailing: Text(
-                            DateFormat('HH:mm').format(msg.sentAt),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                );
-              },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '* هذا السجل للمراجعة فقط *',
+                  style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic),
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('إغلاق'),
-            ),
-          ],
         ),
       ),
     );
@@ -94,59 +160,87 @@ class AdminReportsScreen extends ConsumerWidget {
     String studentId,
   ) {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: Text('إرسال رسالة إلى $studentId'),
-          content: TextField(
-            controller: controller,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'اكتب رسالتك هنا...',
-              border: OutlineInputBorder(),
+        child: Dialog(
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'إرسال إلى $studentId',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 3,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    decoration: const InputDecoration(
+                      hintText: 'اكتب رسالتك هنا...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final message = controller.text.trim();
+                        if (message.isEmpty) return;
+                        try {
+                          await ref.read(systemMessageServiceProvider).sendAdminMessage(
+                            recipientId: recipientId,
+                            message: message,
+                          );
+                          if (context.mounted) {
+                            Navigator.pop(ctx);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('تم إرسال الرسالة بنجاح.')),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('فشل: $e'), backgroundColor: Colors.red),
+                            );
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? Colors.teal[700] : Colors.green,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text('إرسال الآن'),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final message = controller.text.trim();
-                if (message.isEmpty) return;
-
-                try {
-                  await ref
-                      .read(systemMessageServiceProvider)
-                      .sendAdminMessage(
-                        recipientId: recipientId,
-                        message: message,
-                      );
-
-                  if (context.mounted) {
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('تم إرسال الرسالة بنجاح.')),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('فشل في إرسال الرسالة: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              child: const Text('إرسال'),
-            ),
-          ],
         ),
       ),
     );
@@ -154,221 +248,136 @@ class AdminReportsScreen extends ConsumerWidget {
 
   void _showBroadcastDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: const Text('بث تعميم لجميع الطلاب'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'سيتم إرسال هذه الرسالة إلى جميع المسجلين في التطبيق (صندوق الرسائل الواردة).',
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  hintText: 'اكتب التعميم هنا...',
-                  border: OutlineInputBorder(),
+        child: Dialog(
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'بث تعميم لجميع الطلاب',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                final message = controller.text.trim();
-                if (message.isEmpty) return;
-
-                // Final confirmation
-                final confirm = await showDialog<bool>(
-                  context: ctx,
-                  builder: (confirmCtx) => AlertDialog(
-                    title: const Text('تأكيد الإرسال'),
-                    content: const Text(
-                      'هل أنت متأكد من رغبتك في إرسال هذا التعميم للجميع؟',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(confirmCtx, false),
-                        child: const Text('تراجع'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(confirmCtx, true),
-                        child: const Text('نعم، أرسل للكل'),
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                const Text(
+                  'سيتم إرسال هذه الرسالة إلى جميع المسجلين.',
+                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                );
+                  child: TextField(
+                    controller: controller,
+                    maxLines: 4,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    decoration: const InputDecoration(
+                      hintText: 'اكتب التعميم هنا...',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.all(16),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(ctx),
+                      child: const Text('إلغاء'),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final message = controller.text.trim();
+                        if (message.isEmpty) return;
 
-                if (confirm != true) return;
+                        final confirm = await showDialog<bool>(
+                          context: ctx,
+                          builder: (confirmCtx) => AlertDialog(
+                            title: const Text('تأكيد الإرسال'),
+                            content: const Text('هل أنت متأكد من إرسال هذا التعميم للجميع؟'),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(confirmCtx, false), child: const Text('تراجع')),
+                              TextButton(onPressed: () => Navigator.pop(confirmCtx, true), child: const Text('نعم، أرسل')),
+                            ],
+                          ),
+                        );
 
-                if (context.mounted) {
-                  // Show progress indicator
-                  showDialog(
-                    context: context,
-                    barrierDismissible: false,
-                    builder: (loadingCtx) =>
-                        const Center(child: CircularProgressIndicator()),
-                  );
-                }
+                        if (confirm != true) return;
 
-                try {
-                  await ref
-                      .read(systemMessageServiceProvider)
-                      .broadcastMessage(message: message);
-
-                  if (context.mounted) {
-                    Navigator.pop(context); // Close loading
-                    Navigator.pop(ctx); // Close dialog
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('تم إرسال التعميم بنجاح لجميع الطلاب.'),
+                        if (context.mounted) {
+                          showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+                          try {
+                            await ref.read(systemMessageServiceProvider).broadcastMessage(message: message);
+                            if (context.mounted) {
+                              Navigator.pop(context); // Close loading
+                              Navigator.pop(ctx); // Close dialog
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال التعميم بنجاح.')));
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل: $e'), backgroundColor: Colors.red));
+                            }
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isDark ? Colors.blue[900] : Colors.blue[800],
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                    );
-                  }
-                } catch (e) {
-                  if (context.mounted) {
-                    Navigator.pop(context); // Close loading
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('فشل في إرسال التعميم: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue[900],
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('بث للجميع'),
+                      child: const Text('بث للجميع'),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  /// Shared action buttons: Send Message + Block User
-  /// Used for both user reports (passing targetId) and book reports (passing publisherId)
-  Widget _buildUserActionButtons(
-    BuildContext context,
-    WidgetRef ref,
-    AuthService authService,
-    BookService bookService,
-    String userId,
-    String userStudentId,
-  ) {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => _showSendMessageDialog(
-              context, ref, userId, userStudentId,
-            ),
-            icon: const Icon(Icons.send_rounded),
-            label: const Text('إرسال رسالة'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.blue[700],
-            ),
-          ),
+  Widget _buildActionPill({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+    required bool isDark,
+  }) {
+    return Expanded(
+      child: ElevatedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 16),
+        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+          foregroundColor: isDark ? color.withValues(alpha: 0.8) : color,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
-        const SizedBox(height: 8),
-        StreamBuilder<bool>(
-          stream: authService.isUserBlocked(userId),
-          builder: (context, blockedSnapshot) {
-            final isBlocked = blockedSnapshot.data ?? false;
-            if (isBlocked) {
-              return const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'هذا المستخدم محظور حالياً',
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              );
-            }
-            return SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('حظر المستخدم نهائياً'),
-                      content: Text(
-                        'هل أنت متأكد من حظر الطالب $userStudentId نهائياً؟ سيتم إخفاء جميع إعلاناته ومنعه من استخدام التطبيق.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('إلغاء'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text(
-                            'تأكيد الحظر',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    try {
-                      await authService.blockUser(userId);
-                      await bookService.hideBooksByUserId(userId);
-                      final chatService = ref.read(chatServiceProvider);
-                      await chatService.closeAllUserChats(userId, 'Admin (الحظر)');
-                      await ref.read(systemMessageServiceProvider).sendAdminMessage(
-                        recipientId: userId,
-                        message: 'لقد تم حظرك نهائياً من استخدام التطبيق. إذا كنت تعتقد أن هذا حصل عن طريق خطأ، يرجى التواصل معنا عبر البريد الإلكتروني: solosoulacc@tutamail.com',
-                      );
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('تم حظر المستخدم بنجاح.')),
-                        );
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('فشل في الحظر: $e'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
-                icon: const Icon(Icons.block),
-                label: const Text('حظر المستخدم نهائياً'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red[900],
-                ),
-              ),
-            );
-          },
-        ),
-      ],
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final reportService = ReportService();
     final bookService = BookService();
     final authService = ref.watch(authServiceProvider);
@@ -377,382 +386,249 @@ class AdminReportsScreen extends ConsumerWidget {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('إدارة التقارير'),
+          title: const Text('إدارة التقارير', style: TextStyle(fontWeight: FontWeight.bold)),
           actions: [
             IconButton(
-              icon: const Icon(Icons.person_off_rounded),
-              tooltip: 'المستخدمون المحظورون',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const BlockedUsersScreen(),
-                  ),
-                );
-              },
+              icon: const Icon(Icons.person_off_rounded, size: 22),
+              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedUsersScreen())),
             ),
             IconButton(
-              icon: const Icon(Icons.campaign_outlined),
-              tooltip: 'إرسال تعميم للكل',
+              icon: const Icon(Icons.campaign_outlined, size: 24),
               onPressed: () => _showBroadcastDialog(context, ref),
             ),
+            const SizedBox(width: 8),
           ],
         ),
         body: StreamBuilder<List<Map<String, dynamic>>>(
           stream: reportService.getAllReports(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              final errorMsg = snapshot.error.toString();
-              final isIndexBuilding = errorMsg.contains('FAILED_PRECONDITION') || 
-                                     errorMsg.contains('index');
-              
-              if (isIndexBuilding) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.hourglass_empty_outlined, size: 48, color: Colors.orange),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'جاري بناء الفهرس',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'يتم حالياً بناء فهرس قاعدة البيانات.\nيرجى الانتظار بضع دقائق ثم حاول مرة أخرى.',
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('العودة'),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              
-              return Center(
-                child: Text('خطأ في تحميل التقارير: ${snapshot.error}'),
-              );
-            }
+            if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+            if (snapshot.hasError) return const Center(child: Text('خطأ في تحميل التقارير'));
 
             final reports = snapshot.data ?? [];
+            if (reports.isEmpty) return const Center(child: Text('لا توجد تقارير حالياً.', style: TextStyle(color: Colors.grey)));
 
-            if (reports.isEmpty) {
-              return const Center(child: Text('لا توجد تقارير حالياً.'));
-            }
-
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
+            return ListView.separated(
+              padding: EdgeInsets.zero,
               itemCount: reports.length,
+              separatorBuilder: (context, index) => Divider(
+                height: 1, 
+                thickness: 1, 
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                indent: 16,
+              ),
               itemBuilder: (context, index) {
                 final report = reports[index];
-                final dynamic rawTimestamp = report['timestamp'];
-                final DateTime timestamp = rawTimestamp is DateTime
-                    ? rawTimestamp
-                    : (rawTimestamp as dynamic).toDate();
+                final DateTime timestamp = (report['timestamp'] as dynamic).toDate();
+                final dateStr = DateFormat('yyyy/MM/dd hh:mm a').format(timestamp);
 
-                final dateStr = DateFormat(
-                  'yyyy/MM/dd hh:mm a',
-                ).format(timestamp);
-
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: ExpansionTile(
-                    title: FutureBuilder<String?>(
-                      future: report['targetType'] == 'user'
-                          ? ref
-                                .read(authServiceProvider)
-                                .getStudentIdFromUid(report['targetId'])
-                          : Future.value(null),
-                      builder: (context, userSnapshot) {
-                        final displayTitle = report['targetType'] == 'user'
-                            ? "مستخدم: ${userSnapshot.data ?? report['targetId']}"
-                            : "كتاب: ${report['targetTitle'] ?? report['targetId']}";
-                        return Text(
-                          displayTitle,
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        );
-                      },
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('تاريخ: $dateStr'),
-                        StreamBuilder<int>(
-                          stream: reportService.getReportCount(
-                            report['targetId'],
-                          ),
-                          builder: (context, countSnapshot) {
-                            final count = countSnapshot.data ?? 0;
-                            return Text(
-                              'إجمالي الشكاوى على هذا الهدف: $count',
-                              style: const TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('النوع: ${report['targetType']}'),
-                            const SizedBox(height: 4),
-                            FutureBuilder<String?>(
-                              future: ref
-                                  .read(authServiceProvider)
-                                  .getStudentIdFromUid(report['reporterId']),
-                              builder: (context, userSnapshot) {
-                                final studentId =
-                                    userSnapshot.data ?? report['reporterId'];
-                                return Text('المرسل: $studentId');
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'سبب الإبلاغ:',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(report['reason'] ?? 'لا يوجد وصف.'),
-
-                            // ── Common Actions: Send Message + Block User ──
-                            const SizedBox(height: 12),
-                            if (report['targetType'] == 'user') ...[  
-                              FutureBuilder<String?>(
-                                future: ref
-                                    .read(authServiceProvider)
-                                    .getStudentIdFromUid(report['targetId']),
-                                builder: (context, targetSnapshot) {
-                                  final targetStudentId =
-                                      targetSnapshot.data ?? report['targetId'];
-                                  return _buildUserActionButtons(
-                                    context, ref, authService, bookService,
-                                    report['targetId'], targetStudentId,
-                                  );
-                                },
-                              ),
-                            ],
-
-                            // ── User-specific: Show Conversation ──
-                            if (report['chatId'] != null) ...[
-                              const SizedBox(height: 12),
-                              SizedBox(
-                                width: double.infinity,
-                                child: OutlinedButton.icon(
-                                  onPressed: () => _showChatHistoryDialog(
-                                    context, ref, report['chatId'],
-                                  ),
-                                  icon: const Icon(Icons.chat_outlined),
-                                  label: const Text('عرض سجل الدردشة'),
-                                ),
-                              ),
-                            ],
-
-                            const Divider(height: 32),
-
-                            // ── Book-specific: Common Actions + Book Details + Delete Ad ──
-                            if (report['targetType'] == 'book') ...[
-                              FutureBuilder<BookModel?>(
-                                future: bookService.getBookById(report['targetId']),
-                                builder: (context, bookSnapshot) {
-                                  if (bookSnapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
-                                  final book = bookSnapshot.data;
-                                  if (book == null) {
-                                    return const Text(
-                                      'هذا الإعلان محذوف بالفعل.',
-                                      style: TextStyle(color: Colors.red),
-                                    );
-                                  }
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      // Common action buttons targeting the book publisher
-                                      FutureBuilder<String?>(
-                                        future: ref
-                                            .read(authServiceProvider)
-                                            .getStudentIdFromUid(book.publisherId),
-                                        builder: (context, publisherSnapshot) {
-                                          final publisherStudentId =
-                                              publisherSnapshot.data ?? book.publisherId;
-                                          return _buildUserActionButtons(
-                                            context, ref, authService, bookService,
-                                            book.publisherId, publisherStudentId,
-                                          );
-                                        },
-                                      ),
-                                      const Divider(height: 24),
-                                      // Book details
-                                      const Text(
-                                        'تفاصيل الإعلان المبلغ عنه:',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.blue,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text('العنوان: ${book.title}'),
-                                      Text('المؤلف: ${book.author}'),
-                                      FutureBuilder<String?>(
-                                        future: ref
-                                            .read(authServiceProvider)
-                                            .getStudentIdFromUid(book.publisherId),
-                                        builder: (context, userSnapshot) {
-                                          return Text(
-                                            'الناشر: ${userSnapshot.data ?? book.publisherId}',
-                                          );
-                                        },
-                                      ),
-                                      const SizedBox(height: 4),
-                                      const Text(
-                                        'الوصف:',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      Text(book.description),
-                                      const SizedBox(height: 16),
-                                      // Delete Ad button
-                                      SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton.icon(
-                                          onPressed: () async {
-                                            final confirm = await showDialog<bool>(
-                                              context: context,
-                                              builder: (ctx) => AlertDialog(
-                                                title: const Text('حذف الإعلان'),
-                                                content: const Text(
-                                                  'هل أنت متأكد من حذف هذا الإعلان نهائياً؟ لا يمكن التراجع.',
-                                                ),
-                                                actions: [
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(ctx, false),
-                                                    child: const Text('إلغاء'),
-                                                  ),
-                                                  TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(ctx, true),
-                                                    child: const Text(
-                                                      'حذف الإعلان',
-                                                      style: TextStyle(color: Colors.red),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                            if (confirm == true) {
-                                              await bookService.deleteBook(
-                                                report['targetId'],
-                                              );
-                                              if (context.mounted) {
-                                                ScaffoldMessenger.of(context)
-                                                    .showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      'تم حذف الإعلان بنجاح.',
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            }
-                                          },
-                                          icon: const Icon(
-                                            Icons.delete_forever,
-                                            color: Colors.white,
+                      // Header: Target Info
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          FutureBuilder<String?>(
+                            future: report['targetType'] == 'user'
+                                ? authService.getStudentIdFromUid(report['targetId'])
+                                : Future.value(report['targetTitle']),
+                            builder: (context, targetSnapshot) {
+                              final title = targetSnapshot.data ?? 'هدف غير معروف';
+                              return Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: report['targetType'] == 'user' 
+                                              ? (isDark ? Colors.orange[900]!.withValues(alpha: 0.3) : Colors.orange[50])
+                                              : (isDark ? Colors.blue[900]!.withValues(alpha: 0.3) : Colors.blue[50]),
+                                            borderRadius: BorderRadius.circular(6),
                                           ),
-                                          label: const Text(
-                                            'حذف الإعلان',
-                                            style: TextStyle(color: Colors.white),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.red,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                },
-                              ),
-                            ],
-
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                TextButton.icon(
-                                  onPressed: () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (ctx) => AlertDialog(
-                                        title: const Text('حذف التقرير'),
-                                        content: const Text(
-                                          'هل أنت متأكد من حذف هذا التقرير؟ (سيتم الاحتفاظ بالإعلان إذا لم يتم حذفه يدوياً).',
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(ctx, false),
-                                            child: const Text('إلغاء'),
-                                          ),
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(ctx, true),
-                                            child: const Text(
-                                              'حذف التقرير',
-                                              style: TextStyle(
-                                                color: Colors.red,
-                                              ),
+                                          child: Text(
+                                            report['targetType'] == 'user' ? 'مستخدم' : 'كتاب',
+                                            style: TextStyle(
+                                              fontSize: 10, 
+                                              fontWeight: FontWeight.bold,
+                                              color: report['targetType'] == 'user' ? Colors.orange[300] : Colors.blue[300],
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    );
-
-                                    if (confirm == true) {
-                                      await reportService.deleteReport(
-                                        report['id'],
-                                      );
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          const SnackBar(
-                                            content: Text('تم حذف التقرير.'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            title,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold, 
+                                              fontSize: 16,
+                                              color: isDark ? Colors.white : Colors.black,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  icon: const Icon(
-                                    Icons.delete_outline,
-                                    color: Colors.grey,
-                                  ),
-                                  label: const Text(
-                                    'حذف التقرير',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(dateStr, style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[600] : Colors.grey[400])),
+                                  ],
                                 ),
-                              ],
-                            ),
-                          ],
+                              );
+                            },
+                          ),
+                          // Report Count Badge
+                          StreamBuilder<int>(
+                            stream: reportService.getReportCount(report['targetId']),
+                            builder: (context, countSnapshot) {
+                              final count = countSnapshot.data ?? 0;
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: isDark ? Colors.red[900]!.withValues(alpha: 0.3) : Colors.red[50],
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  '$count تقارير',
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.red[300] : Colors.red[700]),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      // Reporter Info
+                      FutureBuilder<String?>(
+                        future: authService.getStudentIdFromUid(report['reporterId']),
+                        builder: (context, reporterSnapshot) {
+                          return Row(
+                            children: [
+                              Icon(Icons.flag_outlined, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                              const SizedBox(width: 4),
+                              Text(
+                                'بواسطة: ${reporterSnapshot.data ?? 'مجهول'}',
+                                style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[600]),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      // Reason Box
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey[50],
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        child: Text(
+                          report['reason'] ?? 'لا يوجد وصف.',
+                          style: TextStyle(fontSize: 14, height: 1.5, color: isDark ? Colors.grey[300] : Colors.black87),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      // Conversation Button
+                      if (report['chatId'] != null)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () => _showChatHistoryDialog(context, ref, report['chatId']),
+                              icon: const Icon(Icons.forum_outlined, size: 18),
+                              label: const Text('عرض المحادثة المتعلقة'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: isDark ? Colors.blue[300] : Colors.blue[700],
+                                side: BorderSide(color: isDark ? Colors.blue[900]! : Colors.blue[100]!),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Action Pills
+                      FutureBuilder<String?>(
+                        future: report['targetType'] == 'user' 
+                          ? authService.getStudentIdFromUid(report['targetId'])
+                          : bookService.getBookById(report['targetId']).then((b) => b?.publisherId),
+                        builder: (context, targetUserSnapshot) {
+                          final targetUserId = report['targetType'] == 'user' ? report['targetId'] : targetUserSnapshot.data;
+                          if (targetUserId == null) return const SizedBox.shrink();
+
+                          return Row(
+                            children: [
+                              _buildActionPill(
+                                icon: Icons.mail_outline,
+                                label: 'مراسلة',
+                                color: Colors.blue,
+                                isDark: isDark,
+                                onTap: () async {
+                                  final studentId = await authService.getStudentIdFromUid(targetUserId);
+                                  if (context.mounted) _showSendMessageDialog(context, ref, targetUserId, studentId ?? 'مستخدم');
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildActionPill(
+                                icon: Icons.block_flipped,
+                                label: 'حظر نهائي',
+                                color: Colors.red,
+                                isDark: isDark,
+                                onTap: () async {
+                                  final studentId = await authService.getStudentIdFromUid(targetUserId);
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (dialogCtx) => AlertDialog(
+                                      backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                                      title: Text('حظر نهائي', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                                      content: Text('هل أنت متأكد من حظر $studentId؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('إلغاء')),
+                                        TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('حظر', style: TextStyle(color: Colors.red))),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    await authService.blockUser(targetUserId);
+                                    await bookService.hideBooksByUserId(targetUserId);
+                                    await ref.read(chatServiceProvider).closeAllUserChats(targetUserId, 'Admin (Ban)');
+                                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحظر.')));
+                                  }
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      // Close Report Button
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogCtx) => AlertDialog(
+                                  backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                                  title: Text('إغلاق التقرير', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                                  content: Text('هل تريد أرشفة/حذف هذا التقرير؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('إلغاء')),
+                                    TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('إغلاق', style: TextStyle(color: Colors.grey))),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) await reportService.deleteReport(report['id']);
+                            },
+                            icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.grey),
+                            label: const Text('إغلاق التقرير', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                          ),
+                        ],
                       ),
                     ],
                   ),
