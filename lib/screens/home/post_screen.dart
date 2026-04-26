@@ -41,7 +41,7 @@ class _PostScreenState extends State<PostScreen> {
   final _authService = AuthService();
 
   String? _selectedFaculty;
-  String _bookType = 'free'; // 'free' or 'exchange'
+  String _bookType = 'free'; // 'free' or 'exchange' or 'request'
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -119,6 +119,85 @@ class _PostScreenState extends State<PostScreen> {
     }
   }
 
+  Widget _buildTypeSelector(String type, String label, Color selectedColor) {
+    final isSelected = _bookType == type;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _bookType = type),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? selectedColor : Colors.grey[100],
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? selectedColor : Colors.transparent,
+              width: 1.5,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : Colors.grey[600],
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String hintText, {String? helperText}) {
+    return InputDecoration(
+      filled: true,
+      fillColor: Colors.grey[100],
+      hintText: hintText,
+      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+      helperText: helperText,
+      helperStyle: TextStyle(color: Colors.grey[500], fontSize: 12),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.blue[300]!, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: Colors.red[300]!, width: 1.5),
+      ),
+    );
+  }
+
+  Widget _buildSectionTitle(String title, {bool isRequired = false}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, right: 4),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          if (isRequired)
+            const Text(
+              ' *',
+              style: TextStyle(color: Colors.red, fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Directionality(
@@ -133,65 +212,38 @@ class _PostScreenState extends State<PostScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 24),
-                    if (_errorMessage != null)
+                    if (_errorMessage != null) ...[
                       Container(
+                        width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red[100],
-                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.red[50],
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red[200]!),
                         ),
                         child: Text(
                           _errorMessage!,
                           style: TextStyle(color: Colors.red[700]),
                         ),
                       ),
-                    if (_errorMessage != null) const SizedBox(height: 16),
-                    const Text(
-                      'نوع المنشور',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    
+                    _buildSectionTitle('نوع المنشور', isRequired: true),
+                    Row(
+                      children: [
+                        _buildTypeSelector('free', 'مجاني', Colors.green[600]!),
+                        _buildTypeSelector('exchange', 'تبادل', Colors.blue[600]!),
+                        _buildTypeSelector('request', 'مطلوب', Colors.purple[600]!),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    RadioListTile<String>(
-                      title: const Text('أعرض كتاباً مجانياً'),
-                      value: 'free',
-                      groupValue: _bookType,
-                      onChanged: (value) {
-                        setState(() {
-                          _bookType = value ?? 'free';
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('أعرض كتاباً للمبادلة'),
-                      value: 'exchange',
-                      groupValue: _bookType,
-                      onChanged: (value) {
-                        setState(() {
-                          _bookType = value ?? 'free';
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    RadioListTile<String>(
-                      title: const Text('أطلب كتاباً'),
-                      value: 'request',
-                      groupValue: _bookType,
-                      onChanged: (value) {
-                        setState(() {
-                          _bookType = value ?? 'free';
-                        });
-                      },
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 28),
+
+                    _buildSectionTitle('الكلية', isRequired: true),
                     DropdownButtonFormField(
-                      initialValue: _selectedFaculty,
+                      value: _selectedFaculty,
                       isExpanded: true,
+                      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                       items: faculties.map((faculty) {
                         return DropdownMenuItem(
                           value: faculty,
@@ -203,16 +255,7 @@ class _PostScreenState extends State<PostScreen> {
                           _selectedFaculty = value;
                         });
                       },
-                      decoration: InputDecoration(
-                        labelText: 'اختر الكلية',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                      ),
+                      decoration: _buildInputDecoration('اختر الكلية'),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'يرجى اختيار الكلية';
@@ -220,73 +263,55 @@ class _PostScreenState extends State<PostScreen> {
                         return null;
                       },
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
+
+                    _buildSectionTitle('عنوان الكتاب', isRequired: true),
                     TextFormField(
                       controller: _titleController,
                       maxLength: _titleMaxLength,
-                      decoration: InputDecoration(
-                        labelText: 'عنوان الكتاب',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                      decoration: _buildInputDecoration(
+                        'مثال: كتاب التفاضل والتكامل 101',
                         helperText: 'الحد الأقصى $_titleMaxLength حرفاً',
                       ),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null || value.trim().isEmpty) {
                           return 'العنوان مطلوب';
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    _buildSectionTitle('المؤلف (اختياري)'),
                     TextFormField(
                       controller: _authorController,
                       maxLength: _authorMaxLength,
-                      decoration: InputDecoration(
-                        labelText: 'المؤلف (اختياري)',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                      decoration: _buildInputDecoration(
+                        'اسم مؤلف الكتاب',
                         helperText: 'الحد الأقصى $_authorMaxLength حرفاً',
                       ),
-                      validator: (value) {
-                        return null;
-                      },
                     ),
                     const SizedBox(height: 16),
+
+                    _buildSectionTitle('وصف الكتاب (اختياري)'),
                     TextFormField(
                       controller: _descriptionController,
                       maxLines: 3,
                       maxLength: 150,
-                      decoration: InputDecoration(
-                        labelText: 'وصف الكتاب (اختياري)',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
+                      decoration: _buildInputDecoration(
+                        'أضف أي تفاصيل أخرى عن الكتاب...',
                         helperText: 'الحد الأقصى 150 حرفاً',
                       ),
-                      validator: (value) {
-                        return null;
-                      },
                     ),
+                    
                     if (_bookType != 'request') ...[
                       const SizedBox(height: 16),
+                      _buildSectionTitle('حالة الكتاب', isRequired: true),
                       DropdownButtonFormField(
-                        initialValue: _conditionController.text.isEmpty
+                        value: _conditionController.text.isEmpty
                             ? null
                             : _conditionController.text,
+                        icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                         items: _conditions.map((condition) {
                           return DropdownMenuItem(
                             value: condition,
@@ -295,9 +320,9 @@ class _PostScreenState extends State<PostScreen> {
                                 Icon(
                                   BookIcons.getConditionIcon(condition),
                                   size: 18,
-                                  color: Colors.grey[700],
+                                  color: Colors.grey[600],
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 12),
                                 Text(condition),
                               ],
                             ),
@@ -308,16 +333,7 @@ class _PostScreenState extends State<PostScreen> {
                             _conditionController.text = value ?? '';
                           });
                         },
-                        decoration: InputDecoration(
-                          labelText: 'حالة الكتاب',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                        ),
+                        decoration: _buildInputDecoration('اختر حالة الكتاب'),
                         validator: (value) {
                           if (_bookType != 'request' && (value == null || value.isEmpty)) {
                             return 'يرجى اختيار حالة الكتاب';
@@ -328,41 +344,92 @@ class _PostScreenState extends State<PostScreen> {
                     ],
 
                     if (_bookType == 'exchange') ...[
-                      const SizedBox(height: 16),
-                      TextFormField(
-                        controller: _exchangeDetailsController,
-                        maxLength: _exchangeDetailsMaxLength,
-                        decoration: InputDecoration(
-                          labelText: 'ما الكتاب الذي تريده في المقابل؟',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          helperText:
-                              'الحد الأقصى $_exchangeDetailsMaxLength حرفاً',
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue[50],
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: Colors.blue[100]!),
                         ),
-                        maxLines: 3,
-                        validator: (value) {
-                          if (_bookType == 'exchange' &&
-                              (value == null || value.isEmpty)) {
-                            return 'يرجى تحديد ما تريده في المقابل';
-                          }
-                          return null;
-                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.swap_horiz, color: Colors.blue[700], size: 20),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'تفاصيل المبادلة',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blue[900],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _exchangeDetailsController,
+                              maxLength: _exchangeDetailsMaxLength,
+                              maxLines: 2,
+                              decoration: InputDecoration(
+                                filled: true,
+                                fillColor: Colors.white,
+                                hintText: 'ما الكتاب الذي تريده في المقابل؟',
+                                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                contentPadding: const EdgeInsets.all(12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.blue[200]!),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(color: Colors.blue[400]!, width: 1.5),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (_bookType == 'exchange' &&
+                                    (value == null || value.trim().isEmpty)) {
+                                  return 'يرجى تحديد ما تريده في المقابل';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 32),
+                    
+                    const SizedBox(height: 40),
+                    
                     SizedBox(
                       width: double.infinity,
-                      child: RoundedButton(
-                        text: _isLoading ? 'جاري الرفع...' : 'نشر الكتاب',
-                        onPressed: _isLoading ? () {} : _onPostBook,
-                        enabled: !_isLoading,
+                      height: 54, // Taller button for modern look
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _onPostBook,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green[600],
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                        child: _isLoading 
+                            ? const SizedBox(
+                                height: 24, 
+                                width: 24, 
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                              )
+                            : const Text(
+                                'نشر الكتاب',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                       ),
                     ),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),

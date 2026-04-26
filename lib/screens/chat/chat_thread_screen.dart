@@ -43,7 +43,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
     if (otherUid.isEmpty) return;
 
-    // Prefer the student ID stored on the chat document to avoid extra lookups
     final mapped = chat.participantStudentIds[otherUid];
     if (mapped != null && mapped.isNotEmpty) {
       if (mounted && _otherStudentId != mapped) {
@@ -52,7 +51,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       return;
     }
 
-    // Fallback: query Users collection
     final studentId = await _chatService.getStudentId(otherUid);
     if (mounted && _otherStudentId != studentId) {
       setState(() => _otherStudentId = studentId);
@@ -74,8 +72,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   Future<void> _loadOtherStudentId() async {
-    // Reuse the mapping-aware update method so we prefer
-    // `participantStudentIds` on the chat document and avoid extra lookups.
     await _updateOtherStudentIdFromChat(widget.chat);
   }
 
@@ -101,9 +97,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-          SnackBar(content: Text('فشل إرسال الرسالة: $e')),
-        );
+          ..showSnackBar(SnackBar(content: Text('فشل إرسال الرسالة: $e')));
       }
     }
   }
@@ -112,92 +106,85 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     final controller = TextEditingController();
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('الإبلاغ عن $_otherStudentId'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('يرجى وصف سبب الإبلاغ عن هذا المستخدم:'),
-            const SizedBox(height: 12),
-            TextField(
-              controller: controller,
-              maxLines: 3,
-              decoration: const InputDecoration(
-                hintText: 'أدخل التقرير...',
-                border: OutlineInputBorder(),
+      builder: (ctx) => Directionality(
+        textDirection: ui.TextDirection.rtl,
+        child: AlertDialog(
+          title: Text('الإبلاغ عن $_otherStudentId'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('يرجى وصف سبب الإبلاغ عن هذا المستخدم:'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'أدخل التقرير...',
+                  filled: true,
+                  fillColor: Colors.grey[100],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final reason = controller.text.trim();
+                if (reason.isEmpty) return;
+                
+                final currentUser = _authService.currentUser;
+                if (currentUser == null) return;
+
+                try {
+                  final otherUid = widget.chat.participantIds.firstWhere(
+                    (id) => id != currentUser.uid,
+                    orElse: () => '',
+                  );
+
+                  if (otherUid.isNotEmpty) {
+                    await ReportService().submitReport(
+                      reporterId: currentUser.uid,
+                      targetId: otherUid,
+                      targetType: 'user',
+                      targetTitle: _otherStudentId,
+                      reason: reason,
+                      chatId: widget.chat.id,
+                    );
+                  }
+
+                  if (mounted) {
+                    Navigator.pop(ctx);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تم إرسال التقرير بنجاح.')),
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('فشل إرسال التقرير: $e')),
+                    );
+                  }
+                }
+              },
+              child: const Text(
+                'إرسال',
+                style: TextStyle(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final reason = controller.text.trim();
-              if (reason.isEmpty) {
-                ScaffoldMessenger.of(ctx)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(
-                    const SnackBar(content: Text('يرجى إدخال سبب.')),
-                  );
-                return;
-              }
-              
-              final currentUser = _authService.currentUser;
-              if (currentUser == null) return;
-
-              try {
-                // Find the other participant's UID
-                final otherUid = widget.chat.participantIds.firstWhere(
-                  (id) => id != currentUser.uid,
-                  orElse: () => '',
-                );
-
-                if (otherUid.isNotEmpty) {
-                  await ReportService().submitReport(
-                    reporterId: currentUser.uid,
-                    targetId: otherUid,
-                    targetType: 'user',
-                    targetTitle: _otherStudentId,
-                    reason: reason,
-                    chatId: widget.chat.id,
-                  );
-                }
-
-                if (mounted) {
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      const SnackBar(
-                        content: Text('تم إرسال التقرير بنجاح.'),
-                        backgroundColor: Colors.grey,
-                      ),
-                    );
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context)
-                    ..hideCurrentSnackBar()
-                    ..showSnackBar(
-                      SnackBar(
-                        content: Text('فشل إرسال التقرير: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                }
-              }
-            },
-            child: const Text(
-              'إرسال التقرير',
-              style: TextStyle(color: Colors.orange),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -205,21 +192,30 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   void _closeTrade() async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('إغلاق المبادلة'),
-        content: const Text(
-          'هل أنت متأكد أنك تريد إغلاق هذه المبادلة؟ لن يتمكن أي طرف من إرسال رسائل بعد ذلك.',
+      builder: (context) => Directionality(
+        textDirection: ui.TextDirection.rtl,
+        child: AlertDialog(
+          title: const Text('إغلاق المبادلة'),
+          content: const Text(
+            'هل أنت متأكد؟ لن يتمكن أي طرف من إرسال رسائل بعد ذلك.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('تراجع'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'إغلاق',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('إغلاق', style: TextStyle(color: Colors.red)),
-          ),
-        ],
       ),
     );
 
@@ -228,15 +224,15 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       if (currentUser == null) return;
 
       try {
-        final currentStudentId = await _chatService.getStudentId(currentUser.uid);
+        final currentStudentId = await _chatService.getStudentId(
+          currentUser.uid,
+        );
         await _chatService.closeChat(widget.chat.id, currentStudentId);
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-            SnackBar(content: Text('فشل إغلاق المبادلة: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('فشل إغلاق المبادلة: $e')));
         }
       }
     }
@@ -258,254 +254,264 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       initialData: widget.chat,
       builder: (context, chatSnapshot) {
         final chat = chatSnapshot.data ?? widget.chat;
-
-        final lastSeen = chat.lastSeenAt[currentUser.uid];
-        if (lastSeen == null || chat.updatedAt.isAfter(lastSeen.add(const Duration(seconds: 1)))) {
-          WidgetsBinding.instance.addPostFrameCallback((_) => _markAsSeen());
-        }
-
         final isClosed = chat.isClosed;
-
         final otherUid = chat.participantIds.firstWhere(
           (id) => id != currentUser.uid,
           orElse: () => '',
         );
-
-        final displayId = chat.participantStudentIds[otherUid] ?? _otherStudentId;
-
-        // If we only have a placeholder, keep trying to load the student ID in background
-        if (displayId == 'Chat' || displayId.isEmpty || displayId == otherUid) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _updateOtherStudentIdFromChat(chat);
-          });
-        }
+        final displayId =
+            chat.participantStudentIds[otherUid] ?? _otherStudentId;
 
         return Directionality(
           textDirection: ui.TextDirection.rtl,
           child: Scaffold(
+            backgroundColor: Colors.white,
             appBar: AppBar(
-            title: Text(displayId),
-            elevation: 1,
-            actions: [
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) {
-                  if (value == 'close') _closeTrade();
-                  if (value == 'report') _showReportDialog();
-                },
-                itemBuilder: (context) => [
-                   if (!isClosed)
-                    const PopupMenuItem(
-                      value: 'close',
-                      child: Row(
-                        children: [
-                          Icon(Icons.close, color: Colors.red),
-                          SizedBox(width: 8),
-                          Text(
-                            'إغلاق المبادلة',
-                            style: TextStyle(color: Colors.red),
-                          ),
-                        ],
-                      ),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(displayId, style: const TextStyle(fontSize: 16)),
+                  Text(
+                    chat.bookTitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.normal,
                     ),
-                  // Only show report if the other user is NOT the admin
-                  if (displayId != 'solosoulacc')
-                    const PopupMenuItem(
-                      value: 'report',
-                      child: Row(
-                        children: [
-                          Icon(Icons.flag_outlined, color: Colors.orange),
-                          SizedBox(width: 8),
-                          Text(
-                            'إبلاغ',
-                            style: TextStyle(color: Colors.orange),
-                          ),
-                        ],
-                      ),
-                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
-            ],
-          ),
-          body: Column(
-            children: [
-              Expanded(
-                child: StreamBuilder<List<ChatMessage>>(
-                  stream: _chatService.getChatMessages(widget.chat.id),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    if (snapshot.hasError) {
-                      return Center(
-                        child: Text(
-                          'خطأ في تحميل الرسائل: ${snapshot.error}',
-                        ),
-                      );
-                    }
-
-                    final messages = snapshot.data ?? [];
-
-                    if (messages.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'لا توجد رسائل بعد. قل مرحباً!',
-                          style: TextStyle(color: Colors.grey, fontSize: 16),
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      controller: _scrollController,
-                      reverse: true,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final isMe = message.senderId == currentUser.uid;
-                        return _buildMessageBubble(message, isMe);
-                      },
-                    );
+              actions: [
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) {
+                    if (value == 'close') _closeTrade();
+                    if (value == 'report') _showReportDialog();
                   },
+                  itemBuilder: (context) => [
+                    if (!isClosed)
+                      const PopupMenuItem(
+                        value: 'close',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'إغلاق المبادلة',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (displayId != 'solosoulacc')
+                      const PopupMenuItem(
+                        value: 'report',
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.flag_outlined,
+                              color: Colors.orange,
+                              size: 20,
+                            ),
+                            SizedBox(width: 8),
+                            Text(
+                              'إبلاغ',
+                              style: TextStyle(color: Colors.orange),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
                 ),
-              ),
-
-              // Bottom area: closed notice OR message input
-              if (isClosed)
+              ],
+            ),
+            body: Column(
+              children: [
+                // Modern Safety Note - Now in Green
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(
+                  margin: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 14,
+                    vertical: 8,
                   ),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    border: Border(
-                      top: BorderSide(color: Colors.grey[300]!),
-                    ),
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.green[100]!),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.lock_outline,
-                        size: 16,
-                        color: Colors.grey[500],
+                        Icons.info_outline,
+                        color: Colors.green[700],
+                        size: 20,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'تم إغلاق هذه المبادلة بواسطة ${chat.closedByStudentId ?? 'غير معروف'}',
-                        style: TextStyle(
-                          color: Colors.grey[600],
-                          fontStyle: FontStyle.italic,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'يرجى التحلي بالاحترام واتباع الإرشادات. يمكنك إغلاق المبادلة عند الإنتهاء من قائمة النقاط الثلاث أعلاه.',
+                          style: TextStyle(
+                            color: Colors.green[900],
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ],
                   ),
-                )
-              else
-                _buildMessageInput(),
-            ],
-          ),
+                ),
+                Expanded(
+                  child: StreamBuilder<List<ChatMessage>>(
+                    stream: _chatService.getChatMessages(widget.chat.id),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final messages = snapshot.data ?? [];
+                      if (messages.isEmpty) {
+                        return Center(
+                          child: Text(
+                            'قل مرحباً لـ $displayId!',
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        );
+                      }
+                      return ListView.builder(
+                        controller: _scrollController,
+                        reverse: true,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final isMe = message.senderId == currentUser.uid;
+                          return _buildMessageBubble(message, isMe);
+                        },
+                      );
+                    },
+                  ),
+                ),
+                if (isClosed)
+                  _buildClosedNotice(chat.closedByStudentId)
+                else
+                  _buildMessageInput(),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
+  Widget _buildClosedNotice(String? closedBy) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      color: Colors.grey[50],
+      child: Center(
+        child: Text(
+          'تم إغلاق المبادلة بواسطة ${closedBy ?? 'مستخدم'}',
+          style: TextStyle(
+            color: Colors.grey[600],
+            fontStyle: ui.FontStyle.italic,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMessageBubble(ChatMessage message, bool isMe) {
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12, top: 2),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isMe ? Theme.of(context).primaryColor : Colors.grey[200],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: Radius.circular(isMe ? 16 : 4),
-            bottomRight: Radius.circular(isMe ? 4 : 16),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Text(
+      child: Column(
+        crossAxisAlignment: isMe
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: isMe ? const Color(0xFF2E7D32) : const Color(0xFFF1F1F1),
+              borderRadius: BorderRadius.only(
+                topLeft: const Radius.circular(16),
+                topRight: const Radius.circular(16),
+                bottomLeft: Radius.circular(isMe ? 16 : 4),
+                bottomRight: Radius.circular(isMe ? 4 : 16),
+              ),
+            ),
+            child: Text(
               message.text,
               style: TextStyle(
                 color: isMe ? Colors.white : Colors.black87,
-                fontSize: 16,
+                fontSize: 15,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
               DateFormat('h:mm a').format(message.sentAt),
-              style: TextStyle(
-                color: isMe ? Colors.white70 : Colors.black54,
-                fontSize: 11,
-              ),
+              style: TextStyle(color: Colors.grey[400], fontSize: 10),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMessageInput() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            offset: const Offset(0, -2),
-            blurRadius: 4,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(top: BorderSide(color: Color(0xFFF1F1F1))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              maxLines: null,
+              decoration: InputDecoration(
+                hintText: 'اكتب رسالة...',
+                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                filled: true,
+                fillColor: const Color(0xFFF8F8F8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: _sendMessage,
+            child: CircleAvatar(
+              radius: 22,
+              backgroundColor: const Color(0xFF2E7D32),
+              child: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
+                size: 20,
+              ),
+            ),
           ),
         ],
-      ),
-      child: SafeArea(
-        child: Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _messageController,
-                textCapitalization: TextCapitalization.sentences,
-                keyboardType: TextInputType.multiline,
-                maxLines: null,
-                maxLength: 200,
-                decoration: InputDecoration(
-                  hintText: 'اكتب رسالة...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 10,
-                  ),
-                ),
-                onSubmitted: (_) => _sendMessage(),
-              ),
-            ),
-            const SizedBox(width: 8),
-            CircleAvatar(
-              backgroundColor: Theme.of(context).primaryColor,
-              child: IconButton(
-                icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                onPressed: _sendMessage,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -51,6 +51,27 @@ class SystemMessageService {
     }
   }
 
+  /// Delete a message
+  Future<void> deleteMessage(String messageId) async {
+    try {
+      await _firestore.collection('system_messages').doc(messageId).delete();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  /// Restore a deleted message (Undo)
+  Future<void> restoreMessage(Map<String, dynamic> messageData) async {
+    try {
+      final id = messageData['id'];
+      final data = Map<String, dynamic>.from(messageData);
+      data.remove('id');
+      await _firestore.collection('system_messages').doc(id).set(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   /// Count unread messages for a user
   Stream<int> getUnreadCount(String userId) {
     return _firestore
@@ -68,14 +89,9 @@ class SystemMessageService {
     try {
       final now = DateTime.now();
       
-      // 1. Fetch all user UIDs
-      // Limit to ensure we don't accidentally fetch millions in a small app, 
-      // but here we expect the user base to be manageble.
       final usersSnapshot = await _firestore.collection('Users').get();
       final adminEmail = 'solosoulacc@tutamail.com';
 
-      // 2. Prepare batches
-      // Firestore batches are limited to 500 operations.
       var batch = _firestore.batch();
       int operationCount = 0;
 
@@ -83,21 +99,19 @@ class SystemMessageService {
         final userData = userDoc.data();
         final userEmail = userData['email'] as String?;
         
-        // Skip the admin themselves
         if (userEmail == adminEmail) continue;
 
         final msgRef = _firestore.collection('system_messages').doc();
         batch.set(msgRef, {
           'recipientId': userDoc.id,
           'message': message,
-          'senderName': 'الإدارة (تعميم)', // Admin (Broadcast)
+          'senderName': 'الإدارة (تعميم)', 
           'timestamp': now,
           'isRead': false,
         });
 
         operationCount++;
 
-        // If we reach 500 operations, commit and start a new batch
         if (operationCount == 500) {
           await batch.commit();
           batch = _firestore.batch();
@@ -105,7 +119,6 @@ class SystemMessageService {
         }
       }
 
-      // Commit the final batch
       if (operationCount > 0) {
         await batch.commit();
       }

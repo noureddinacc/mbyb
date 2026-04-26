@@ -4,6 +4,8 @@ class ChatModel {
   final String? lastMessage;
   final DateTime updatedAt;
   final String bookId;
+  final String bookTitle;
+  final String postType;
   final bool isClosed;
   final String? closedByStudentId;
   final Map<String, DateTime> lastSeenAt;
@@ -16,6 +18,8 @@ class ChatModel {
     this.lastMessage,
     required this.updatedAt,
     required this.bookId,
+    this.bookTitle = '',
+    this.postType = 'free',
     this.isClosed = false,
     this.closedByStudentId,
     this.lastSeenAt = const {},
@@ -29,6 +33,8 @@ class ChatModel {
       'lastMessage': lastMessage,
       'updatedAt': updatedAt,
       'bookId': bookId,
+      'bookTitle': bookTitle,
+      'postType': postType,
       'isClosed': isClosed,
       'closedByStudentId': closedByStudentId,
       'lastSeenAt': lastSeenAt.map((k, v) => MapEntry(k, v)),
@@ -44,6 +50,8 @@ class ChatModel {
       lastMessage: map['lastMessage'],
       updatedAt: (map['updatedAt'] as dynamic)?.toDate() ?? DateTime.now(),
       bookId: map['bookId'] ?? '',
+      bookTitle: map['bookTitle'] ?? '',
+      postType: map['postType'] ?? 'free',
       isClosed: map['isClosed'] ?? false,
       closedByStudentId: map['closedByStudentId'],
       lastSeenAt: (() {

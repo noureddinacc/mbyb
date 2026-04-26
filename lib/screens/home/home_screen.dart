@@ -31,8 +31,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
 
-
-
   @override
   Widget build(BuildContext context) {
     final filteredBooksAsync = ref.watch(filteredBooksProvider);
@@ -43,7 +41,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 12),
             Expanded(
               child: filteredBooksAsync.when(
                 data: (books) {
@@ -59,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.zero,
                     itemCount: books.length,
                     itemBuilder: (context, index) {
                       return BookCard(book: books[index]);
@@ -68,7 +65,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 },
                 loading: () {
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.zero,
                     itemCount: 4,
                     itemBuilder: (context, index) => const BookCardSkeleton(),
                   );

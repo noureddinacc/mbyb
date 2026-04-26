@@ -9,62 +9,73 @@ class RulesScreen extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 20),
-                Icon(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          child: Column(
+            children: [
+              const Spacer(flex: 1),
+              // Header Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
                   Icons.security_rounded,
-                  size: 80,
-                  color: Theme.of(
-                    context,
-                  ).primaryColor.withValues(alpha: 0.1),
+                  size: 50,
+                  color: Theme.of(context).primaryColor,
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'إرشادات المجتمع',
-                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'إرشادات المجتمع',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
                   'ساعدنا في إبقاء التبادل في الحرم الجامعي آمناً وموثوقاً للجميع.',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 13,
                     color: Colors.grey[600],
-                    height: 1.5,
+                    height: 1.4,
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
-                const _SafetyCard(
-                  title: 'اللقاء في أماكن عامة',
-                  description:
-                      'رتب دائماً للقاء في مناطق مضاءة جيداً ومكتظة في الحرم الجامعي مثل المكتبة، الساحات، أو نقاط الالتقاء المخصصة.',
-                  icon: Icons.location_on_rounded,
-                  iconColor: Colors.blue,
-                ),
+              ),
+              
+              const Spacer(flex: 1),
 
-                const _SafetyCard(
-                  title: 'تواصل بوضوح',
-                  description:
-                      'استخدم الدردشة داخل التطبيق لتأكيد تفاصيل اللقاء بما في ذلك التاريخ والوقت والمكان قبل الالتقاء.',
-                  icon: Icons.forum_rounded,
-                  iconColor: Colors.orange,
-                ),
-                const _SafetyCard(
-                  title: 'الإبلاغ عن المشاكل',
-                  description:
-                      'إذا واجهت أي سلوك مشبوه أو تصرف غير لائق، قم بالإبلاغ عنه فوراً من خلال التطبيق.',
-                  icon: Icons.report_problem_rounded,
-                  iconColor: Colors.red,
-                ),
-                const SizedBox(height: 24),
-              ],
-            ),
+              // Rules Cards Section
+              const _SafetyCard(
+                title: 'اللقاء في أماكن عامة',
+                description:
+                    'رتب دائماً للقاء في مناطق مضاءة جيداً ومكتظة في الحرم الجامعي مثل المكتبة، الساحات، أو النقاط المخصصة.',
+                icon: Icons.location_on_rounded,
+                iconColor: Colors.blue,
+              ),
+
+              const _SafetyCard(
+                title: 'تواصل بوضوح',
+                description:
+                    'استخدم الدردشة داخل التطبيق لتأكيد تفاصيل اللقاء بما في ذلك التاريخ والوقت والمكان قبل الالتقاء.',
+                icon: Icons.forum_rounded,
+                iconColor: Colors.orange,
+              ),
+              
+              const _SafetyCard(
+                title: 'الإبلاغ عن المشاكل',
+                description:
+                    'إذا واجهت أي سلوك مشبوه أو تصرف غير لائق، قم بالإبلاغ عنه فوراً من خلال التطبيق.',
+                icon: Icons.report_problem_rounded,
+                iconColor: Colors.red,
+              ),
+
+              const Spacer(flex: 2),
+            ],
           ),
         ),
       ),
@@ -88,32 +99,26 @@ class _SafetyCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[100]!),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: iconColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: iconColor, size: 24),
+              child: Icon(icon, color: iconColor, size: 20),
             ),
-            const SizedBox(width: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,17 +126,18 @@ class _SafetyCard extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontSize: 17,
+                      fontSize: 15,
                       fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 4),
                   Text(
                     description,
                     style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[700],
-                      height: 1.5,
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      height: 1.4,
                     ),
                   ),
                 ],
