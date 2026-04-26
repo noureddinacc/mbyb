@@ -1,8 +1,9 @@
 class Validators {
-  static bool isValidStudentEmail(String email) {
-    // must end with @st.aabu.edu.jo (case-insensitive)
+  static bool isValidStudentEmail(String email, String domain) {
+    // must end with the specific university domain (case-insensitive)
+    final escapedDomain = domain.replaceAll('.', r'\.');
     final regExp = RegExp(
-      r"^[a-zA-Z0-9._%+-]+@st\.aabu\.edu\.jo$",
+      "^[a-zA-Z0-9._%+-]+@$escapedDomain\$",
       caseSensitive: false,
     );
     return regExp.hasMatch(email);
@@ -12,17 +13,32 @@ class Validators {
     return email.split('@').first;
   }
 
-  static String? validateEmail(String? value) {
+  static String? validateEmail(String? value, {String? requiredDomain, List<String>? adminEmails}) {
     if (value == null || value.isEmpty) {
       return 'البريد الإلكتروني مطلوب';
     }
-    const extraValidEmail = 'solosoulacc@tutamail.com';
-    if (value.trim().toLowerCase() == extraValidEmail.toLowerCase()) {
+    
+    final email = value.trim().toLowerCase();
+
+    // Check if it's an admin email (global or specific)
+    if (adminEmails != null && adminEmails.any((e) => e.toLowerCase() == email)) {
+      return null;
+    }
+    
+    // Fallback for your original master admin
+    if (email == 'solosoulacc@tutamail.com') {
       return null;
     }
 
-    if (!isValidStudentEmail(value.trim())) {
-      return 'يرجى إدخال بريد جامعي صالح (@st.aabu.edu.jo)';
+    if (requiredDomain != null) {
+      if (!isValidStudentEmail(email, requiredDomain)) {
+        return 'يرجى إدخال بريد جامعي صالح (@$requiredDomain)';
+      }
+    } else {
+      // Basic email validation if no domain is specified
+      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(email)) {
+        return 'يرجى إدخال بريد إلكتروني صالح';
+      }
     }
     return null;
   }

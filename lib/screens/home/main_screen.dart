@@ -17,6 +17,8 @@ import '../../providers/chat_provider.dart';
 import '../../providers/admin_provider.dart';
 import '../admin/admin_reports_screen.dart';
 import 'system_messages_screen.dart';
+import 'my_posts_screen.dart';
+import '../../providers/theme_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class MainScreen extends ConsumerStatefulWidget {

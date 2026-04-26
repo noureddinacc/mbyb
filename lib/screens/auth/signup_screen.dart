@@ -6,6 +6,9 @@ import '../../widgets/rounded_button.dart';
 import '../../utils/validators.dart';
 import '../../services/auth_service.dart';
 
+import '../../models/university.dart';
+import '../../providers/service_providers.dart';
+
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
@@ -18,7 +21,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  final _authService = AuthService();
+  
+  University? _selectedUniversity;
   bool _isLoading = false;
   String? _errorMessage;
   bool _obscurePassword = true;
@@ -33,6 +37,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   void _onSignup() async {
+    if (_selectedUniversity == null) {
+      setState(() => _errorMessage = 'يرجى اختيار الجامعة');
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -43,12 +52,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         final email = _emailController.text.trim();
         final password = _passwordController.text;
 
-        await _authService.signUp(email: email, password: password);
+        await ref.read(authServiceProvider).signUp(
+          email: email, 
+          password: password,
+          universityId: _selectedUniversity!.id,
+        );
+        
         setState(() {
           _errorMessage =
               'تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتسجيل الدخول.';
         });
-        await _authService.logOut();
+        await ref.read(authServiceProvider).logOut();
         return;
       } on FirebaseAuthException catch (e) {
         setState(() {
@@ -70,6 +84,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final universitiesAsync = ref.watch(universitiesProvider);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -89,20 +105,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Image.asset('assets/in/app-logo.png', height: 250),
-                      const SizedBox(height: 24),
+                      Image.asset('assets/in/app-logo.png', height: 180),
+                      const SizedBox(height: 16),
                       const Text(
-                        'إنشاء حساب',
+                        'إنشاء حساب جديد',
                         style: TextStyle(
-                          fontSize: 28,
+                          fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 32),
                       if (_errorMessage != null)
                         Container(
                           padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
                           decoration: BoxDecoration(
                             color: Colors.red[100],
                             borderRadius: BorderRadius.circular(8),
@@ -112,11 +129,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             style: TextStyle(color: Colors.red[700]),
                           ),
                         ),
-                      if (_errorMessage != null) const SizedBox(height: 16),
+                      
+                      // University Selection
+                      universitiesAsync.when(
+                        data: (universities) => DropdownButtonFormField<University>(
+                          value: _selectedUniversity,
+                          decoration: InputDecoration(
+                            labelText: 'اختر جامعتك',
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                            prefixIcon: const Icon(Icons.school_outlined),
+                          ),
+                          items: universities.map((u) => DropdownMenuItem(
+                            value: u,
+                            child: Text(u.name),
+                          )).toList(),
+                          onChanged: (u) {
+                            setState(() {
+                              _selectedUniversity = u;
+                              _emailController.clear(); // Clear email when university changes
+                            });
+                          },
+                        ),
+                        loading: () => const CircularProgressIndicator(),
+                        error: (e, _) => Text('خطأ في تحميل الجامعات: $e'),
+                      ),
+                      const SizedBox(height: 16),
+
                       TextFormField(
                         controller: _emailController,
                         decoration: InputDecoration(
-                          labelText: 'البريد الإلكتروني',
+                          labelText: 'البريد الإلكتروني الجامعي',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -126,28 +168,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ),
                         ),
                         keyboardType: TextInputType.emailAddress,
-                        validator: Validators.validateEmail,
-                      ),
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: TextButton(
-                          onPressed: () {
-                            final text = _emailController.text;
-                            if (!text.contains('@')) {
-                              _emailController.text = '$text@st.aabu.edu.jo';
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 30),
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                          child: const Text(
-                            '@st.aabu.edu.jo',
-                            textDirection: TextDirection.ltr,
-                          ),
+                        validator: (value) => Validators.validateEmail(
+                          value, 
+                          requiredDomain: _selectedUniversity?.emailDomain,
+                          adminEmails: _selectedUniversity?.adminEmails,
                         ),
                       ),
+                      if (_selectedUniversity != null)
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: TextButton(
+                            onPressed: () {
+                              final text = _emailController.text;
+                              if (!text.contains('@')) {
+                                _emailController.text = '$text@${_selectedUniversity!.emailDomain}';
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 30),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: Text(
+                              '@${_selectedUniversity!.emailDomain}',
+                              textDirection: TextDirection.ltr,
+                            ),
+                          ),
+                        ),
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _passwordController,

@@ -18,6 +18,7 @@ class AuthService {
   Future<UserCredential> signUp({
     required String email,
     required String password,
+    required String universityId,
   }) async {
     try {
       final userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
@@ -35,6 +36,7 @@ class AuthService {
           .set({
         'email': email,
         'studentID': studentId,
+        'universityId': universityId,
         'createdAt': DateTime.now(),
       });
 
@@ -152,6 +154,15 @@ class AuthService {
             return data;
           }).toList();
         });
+  }
+
+  /// Get user profile data (Stream)
+  Stream<Map<String, dynamic>?> getUserProfile(String uid) {
+    return _firestore
+        .collection('Users')
+        .doc(uid)
+        .snapshots()
+        .map((doc) => doc.data());
   }
 
   /// Log out

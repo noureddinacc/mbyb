@@ -53,4 +53,22 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.teal,
+        brightness: Brightness.dark,
+        primary: Colors.teal[300],
+      ),
+      appBarTheme: AppBarTheme(
+        centerTitle: true,
+        backgroundColor: Colors.grey[900],
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+    );
+  }
 }

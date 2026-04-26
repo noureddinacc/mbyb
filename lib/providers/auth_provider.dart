@@ -17,3 +17,10 @@ final authStateProvider = StreamProvider<User?>((ref) {
   ref.watch(authRefreshTriggerProvider);
   return authService.authStateChanges;
 });
+
+final userProfileProvider = StreamProvider<Map<String, dynamic>?>((ref) {
+  final authState = ref.watch(authStateProvider).value;
+  if (authState == null) return Stream.value(null);
+  
+  return ref.watch(authServiceProvider).getUserProfile(authState.uid);
+});
