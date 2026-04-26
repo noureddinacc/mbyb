@@ -6,6 +6,7 @@ class RulesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SafeArea(
@@ -18,10 +19,8 @@ class RulesScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 Icon(
                   Icons.security_rounded,
-                  size: 80,
-                  color: Theme.of(
-                    context,
-                  ).primaryColor.withValues(alpha: 0.1),
+                  size: 50,
+                  color: isDark ? Colors.teal[300] : Colors.teal[600],
                 ),
                 const SizedBox(height: 16),
                 const Text(

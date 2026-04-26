@@ -32,11 +32,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       final user = authState.value;
       final isAuth = user != null;
       final isVerified = user?.emailVerified ?? false;
+      final isAdmin = user?.email == 'solosoulacc@tutamail.com';
       final isLoggingIn =
           state.uri.path == '/login' || state.uri.path == '/signup';
 
-      if (!isAuth || !isVerified) {
-        // Redirect to login if not authenticated OR not verified
+      if (!isAuth || (!isVerified && !isAdmin)) {
+        // Redirect to login if not authenticated OR not verified (admin is exempt)
         return isLoggingIn ? null : '/login';
       }
 

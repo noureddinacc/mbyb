@@ -332,91 +332,215 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
   }
 
+  Widget _buildDrawer(dynamic currentUser) {
+    if (currentUser == null) return const SizedBox.shrink();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Drawer(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      child: Column(
+        children: [
+          // Premium Airy Header
+          Container(
+            padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.teal.withValues(alpha: 0.1) : Colors.green[50]?.withValues(alpha: 0.5),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
+                  child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'مرحباً بك',
+                        style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey, fontSize: 12),
+                      ),
+                      Directionality(
+                        textDirection: TextDirection.ltr,
+                        child: Text(
+                          currentUser.email ?? 'مستخدم',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.white : Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          // Navigation Items
+          _buildDrawerItem(
+            icon: Icons.home_rounded,
+            label: 'الرئيسية',
+            color: Colors.teal,
+            isSelected: false,
+            showBackground: false,
+            onTap: () {
+              Navigator.pop(context);
+              if (_selectedIndex != 0) {
+                setState(() => _selectedIndex = 0);
+              }
+            },
+          ),
+          _buildDrawerItem(
+            icon: Icons.collections_bookmark_rounded,
+            label: 'منشوراتي',
+            color: Colors.teal,
+            isSelected: false,
+            showBackground: false,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const MyPostsScreen()),
+              );
+            },
+          ),
+          if (ref.watch(isAdminProvider))
+            _buildDrawerItem(
+              icon: Icons.admin_panel_settings_rounded,
+              label: 'إدارة التقارير',
+              color: Colors.teal,
+              isSelected: false,
+              showBackground: false,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AdminReportsScreen()),
+                );
+              },
+            ),
+          
+          const Spacer(),
+
+          // Dark Mode Toggle - Option 1: Bottom of Drawer
+          Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: ListTile(
+              leading: Icon(
+                isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                color: isDark ? Colors.teal[300] : Colors.orange[400],
+              ),
+              title: Text(
+                'الوضع الليلي',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              trailing: Switch.adaptive(
+                value: isDark,
+                activeColor: Colors.teal[300],
+                onChanged: (val) {
+                  ref.read(themeModeProvider.notifier).toggleTheme(val);
+                },
+              ),
+            ),
+          ),
+
+          // Logout Section
+          Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
+          _buildDrawerItem(
+            icon: Icons.logout_rounded,
+            label: 'تسجيل الخروج',
+            color: Colors.red,
+            isSelected: false,
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: AlertDialog(
+                    title: const Text('تسجيل الخروج'),
+                    content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: const Text('إلغاء'),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: const Text('خروج', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+              
+              if (confirm == true) {
+                await ref.read(authServiceProvider).logOut();
+                if (context.mounted) context.go('/login');
+              }
+            },
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'MBYB v2.0.0', // Updated version to celebrate UI 2.0
+            style: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300], fontSize: 10),
+          ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required IconData icon,
+    required String label,
+    required Color color,
+    bool isSelected = false,
+    bool showBackground = true,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: showBackground ? color.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: color, size: 20),
+        ),
+        title: Text(
+          label,
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            color: isSelected ? color : (isDark ? Colors.white : Colors.black87),
+          ),
+        ),
+        selected: isSelected,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        onTap: onTap,
+      ),
+    );
+  }
   Widget _buildMainScaffold(dynamic currentUser) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: _buildAppBar(currentUser),
-        drawer: _selectedIndex == 0 ? Drawer(
-          child: Column(
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircleAvatar(
-                        radius: 30,
-                        backgroundColor: Colors.white,
-                        child: Icon(Icons.person, size: 35),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        currentUser?.email ?? 'مستخدم',
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              ListTile(
-                leading: const Icon(Icons.home),
-                title: const Text('الرئيسية'),
-                onTap: () {
-                  Navigator.pop(context);
-                  setState(() => _selectedIndex = 0);
-                },
-              ),
-              if (ref.watch(isAdminProvider))
-                ListTile(
-                  leading: const Icon(Icons.admin_panel_settings, color: Colors.orange),
-                  title: const Text('إدارة التقارير', style: TextStyle(color: Colors.orange)),
-                  onTap: () {
-                    Navigator.pop(context);
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AdminReportsScreen()),
-                    );
-                  },
-                ),
-              const Spacer(),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('تسجيل الخروج', style: TextStyle(color: Colors.red)),
-                onTap: () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text('تسجيل الخروج'),
-                      content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('إلغاء'),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text('خروج', style: TextStyle(color: Colors.red)),
-                        ),
-                      ],
-                    ),
-                  );
-                  
-                  if (confirm == true) {
-                    await ref.read(authServiceProvider).logOut();
-                    if (context.mounted) {
-                      context.go('/login');
-                    }
-                  }
-                },
-              ),
-              const SizedBox(height: 20),
-            ],
-          ),
-        ) : null,
+        drawer: _selectedIndex == 0 ? _buildDrawer(currentUser) : null,
         body: IndexedStack(
           index: _selectedIndex,
           children: _screens,
