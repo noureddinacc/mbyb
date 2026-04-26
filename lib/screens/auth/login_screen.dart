@@ -64,13 +64,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Form(
               key: _formKey,
               child: Column(
@@ -81,17 +82,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Center(
                     child: Column(
                       children: [
-                        // Clean Logo - No Background Wrapper
                         Image.asset('assets/in/app-logo.png', height: 80),
                         const SizedBox(height: 24),
-                        const Text(
+                        Text(
                           'مرحباً بعودتك',
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.black87),
+                          style: TextStyle(
+                            fontSize: 28, 
+                            fontWeight: FontWeight.w900, 
+                            color: isDark ? Colors.white : Colors.black87
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'سجل دخولك للمتابعة في مجتمع MBYB',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 14, 
+                            color: isDark ? Colors.grey[500] : Colors.grey[500]
+                          ),
                         ),
                       ],
                     ),
@@ -103,7 +110,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       padding: const EdgeInsets.all(16),
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: Colors.red[50],
+                        color: isDark ? Colors.red[900]!.withValues(alpha: 0.2) : Colors.red[50],
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -121,23 +128,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
 
                   // Email Field
-                  const Text('البريد الجامعي', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    'البريد الجامعي', 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black
+                    )
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _emailController,
                     textAlign: TextAlign.left,
                     textDirection: TextDirection.ltr,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       hintText: 'studentID@st.aabu.edu.jo',
-                      hintStyle: TextStyle(color: Colors.grey[300], fontSize: 14),
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300], fontSize: 14),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20),
+                      prefixIcon: Icon(Icons.alternate_email_rounded, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.validateEmail,
@@ -155,7 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       icon: const Icon(Icons.add_circle_outline, size: 16),
                       label: const Text('@st.aabu.edu.jo', textDirection: TextDirection.ltr),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.green[700],
+                        foregroundColor: isDark ? Colors.green[300] : Colors.green[700],
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ),
@@ -164,26 +179,34 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   const SizedBox(height: 16),
                   
                   // Password Field
-                  const Text('كلمة المرور', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    'كلمة المرور', 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black
+                    )
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     textAlign: TextAlign.left,
                     textDirection: TextDirection.ltr,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      hintStyle: TextStyle(color: Colors.grey[300]),
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300]),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                      prefixIcon: Icon(Icons.lock_outline_rounded, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 20),
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                     ),
@@ -196,7 +219,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _onLogin,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: isDark ? Colors.green[900] : Colors.green[700],
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -213,10 +236,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('ليس لديك حساب؟', style: TextStyle(color: Colors.grey[600])),
+                      Text('ليس لديك حساب؟', style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600])),
                       TextButton(
                         onPressed: () => context.go('/signup'),
-                        child: const Text('إنشاء حساب جديد', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(
+                          'إنشاء حساب جديد', 
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.teal[300] : Colors.green[700]
+                          )
+                        ),
                       ),
                     ],
                   ),

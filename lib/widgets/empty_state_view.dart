@@ -8,18 +8,37 @@ class EmptyStateView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 80, color: Colors.grey),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-            textAlign: TextAlign.center,
-          ),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                icon, 
+                size: 64, 
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 16, 
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
       ),
     );
   }

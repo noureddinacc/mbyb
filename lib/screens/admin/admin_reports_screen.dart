@@ -19,13 +19,14 @@ class AdminReportsScreen extends ConsumerWidget {
   ) {
     final chatService = ref.read(chatServiceProvider);
     final authService = ref.read(authServiceProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: Dialog(
-          backgroundColor: Colors.white,
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           child: Container(
             constraints: const BoxConstraints(maxHeight: 600, maxWidth: 400),
@@ -38,15 +39,19 @@ class AdminReportsScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: Colors.green[50],
+                        color: isDark ? Colors.green[900]!.withValues(alpha: 0.3) : Colors.green[50],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.forum_rounded, color: Colors.green[700], size: 20),
+                      child: Icon(Icons.forum_rounded, color: isDark ? Colors.green[300] : Colors.green[700], size: 20),
                     ),
                     const SizedBox(width: 12),
-                    const Text(
+                    Text(
                       'سجل المحادثة',
-                      style: TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900, 
+                        fontSize: 18,
+                        color: isDark ? Colors.white : Colors.black,
+                      ),
                     ),
                     const Spacer(),
                     IconButton(
@@ -69,13 +74,10 @@ class AdminReportsScreen extends ConsumerWidget {
                         return const Center(child: Text('لا توجد رسائل في هذه المحادثة.', style: TextStyle(color: Colors.grey)));
                       }
 
-                      // Reverse list to show newest at bottom if typical chat, but for history top-down is fine.
-                      // Let's stick to chronological order (top to bottom).
                       return ListView.builder(
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final msg = messages[index];
-                          // Simple sender differentiation based on ID hash or parity for preview
                           final bool isAlternativeSender = index % 2 == 0; 
                           
                           return Padding(
@@ -91,7 +93,7 @@ class AdminReportsScreen extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 10, 
                                         fontWeight: FontWeight.bold,
-                                        color: Colors.grey[400],
+                                        color: isDark ? Colors.grey[500] : Colors.grey[400],
                                       ),
                                     );
                                   },
@@ -100,7 +102,9 @@ class AdminReportsScreen extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: isAlternativeSender ? Colors.grey[100] : Colors.green[700],
+                                    color: isAlternativeSender 
+                                        ? (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100]) 
+                                        : (isDark ? Colors.teal[700] : Colors.green[700]),
                                     borderRadius: BorderRadius.circular(16).copyWith(
                                       bottomRight: isAlternativeSender ? const Radius.circular(16) : Radius.zero,
                                       bottomLeft: isAlternativeSender ? Radius.zero : const Radius.circular(16),
@@ -112,7 +116,7 @@ class AdminReportsScreen extends ConsumerWidget {
                                       Text(
                                         msg.text,
                                         style: TextStyle(
-                                          color: isAlternativeSender ? Colors.black87 : Colors.white,
+                                          color: isAlternativeSender ? (isDark ? Colors.white : Colors.black87) : Colors.white,
                                           fontSize: 14,
                                           height: 1.4,
                                         ),
@@ -156,12 +160,14 @@ class AdminReportsScreen extends ConsumerWidget {
     String studentId,
   ) {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: Dialog(
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -171,17 +177,18 @@ class AdminReportsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'إرسال إلى $studentId',
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
                 ),
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: TextField(
                     controller: controller,
                     maxLines: 3,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: const InputDecoration(
                       hintText: 'اكتب رسالتك هنا...',
                       border: InputBorder.none,
@@ -222,7 +229,7 @@ class AdminReportsScreen extends ConsumerWidget {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: isDark ? Colors.teal[700] : Colors.green,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -241,12 +248,14 @@ class AdminReportsScreen extends ConsumerWidget {
 
   void _showBroadcastDialog(BuildContext context, WidgetRef ref) {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: TextDirection.rtl,
         child: Dialog(
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -254,9 +263,9 @@ class AdminReportsScreen extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'بث تعميم لجميع الطلاب',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -266,12 +275,13 @@ class AdminReportsScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: TextField(
                     controller: controller,
                     maxLines: 4,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: const InputDecoration(
                       hintText: 'اكتب التعميم هنا...',
                       border: InputBorder.none,
@@ -325,7 +335,7 @@ class AdminReportsScreen extends ConsumerWidget {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue[800],
+                        backgroundColor: isDark ? Colors.blue[900] : Colors.blue[800],
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -347,6 +357,7 @@ class AdminReportsScreen extends ConsumerWidget {
     required String label,
     required Color color,
     required VoidCallback onTap,
+    required bool isDark,
   }) {
     return Expanded(
       child: ElevatedButton.icon(
@@ -354,8 +365,8 @@ class AdminReportsScreen extends ConsumerWidget {
         icon: Icon(icon, size: 16),
         label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
         style: ElevatedButton.styleFrom(
-          backgroundColor: color.withValues(alpha: 0.1),
-          foregroundColor: color,
+          backgroundColor: isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+          foregroundColor: isDark ? color.withValues(alpha: 0.8) : color,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 8),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -366,6 +377,7 @@ class AdminReportsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final reportService = ReportService();
     final bookService = BookService();
     final authService = ref.watch(authServiceProvider);
@@ -373,11 +385,7 @@ class AdminReportsScreen extends ConsumerWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          foregroundColor: Colors.black,
           title: const Text('إدارة التقارير', style: TextStyle(fontWeight: FontWeight.bold)),
           actions: [
             IconButton(
@@ -395,7 +403,7 @@ class AdminReportsScreen extends ConsumerWidget {
           stream: reportService.getAllReports(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-            if (snapshot.hasError) return Center(child: Text('خطأ في تحميل التقارير'));
+            if (snapshot.hasError) return const Center(child: Text('خطأ في تحميل التقارير'));
 
             final reports = snapshot.data ?? [];
             if (reports.isEmpty) return const Center(child: Text('لا توجد تقارير حالياً.', style: TextStyle(color: Colors.grey)));
@@ -406,7 +414,7 @@ class AdminReportsScreen extends ConsumerWidget {
               separatorBuilder: (context, index) => Divider(
                 height: 1, 
                 thickness: 1, 
-                color: Colors.grey[100],
+                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                 indent: 16,
               ),
               itemBuilder: (context, index) {
@@ -438,7 +446,9 @@ class AdminReportsScreen extends ConsumerWidget {
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: report['targetType'] == 'user' ? Colors.orange[50] : Colors.blue[50],
+                                            color: report['targetType'] == 'user' 
+                                              ? (isDark ? Colors.orange[900]!.withValues(alpha: 0.3) : Colors.orange[50])
+                                              : (isDark ? Colors.blue[900]!.withValues(alpha: 0.3) : Colors.blue[50]),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: Text(
@@ -446,7 +456,7 @@ class AdminReportsScreen extends ConsumerWidget {
                                             style: TextStyle(
                                               fontSize: 10, 
                                               fontWeight: FontWeight.bold,
-                                              color: report['targetType'] == 'user' ? Colors.orange[700] : Colors.blue[700],
+                                              color: report['targetType'] == 'user' ? Colors.orange[300] : Colors.blue[300],
                                             ),
                                           ),
                                         ),
@@ -454,14 +464,18 @@ class AdminReportsScreen extends ConsumerWidget {
                                         Expanded(
                                           child: Text(
                                             title,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold, 
+                                              fontSize: 16,
+                                              color: isDark ? Colors.white : Colors.black,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(dateStr, style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+                                    Text(dateStr, style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[600] : Colors.grey[400])),
                                   ],
                                 ),
                               );
@@ -475,12 +489,12 @@ class AdminReportsScreen extends ConsumerWidget {
                               return Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.red[50],
+                                  color: isDark ? Colors.red[900]!.withValues(alpha: 0.3) : Colors.red[50],
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   '$count تقارير',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.red[700]),
+                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.red[300] : Colors.red[700]),
                                 ),
                               );
                             },
@@ -494,11 +508,11 @@ class AdminReportsScreen extends ConsumerWidget {
                         builder: (context, reporterSnapshot) {
                           return Row(
                             children: [
-                              Icon(Icons.flag_outlined, size: 14, color: Colors.grey[400]),
+                              Icon(Icons.flag_outlined, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
                               const SizedBox(width: 4),
                               Text(
                                 'بواسطة: ${reporterSnapshot.data ?? 'مجهول'}',
-                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[600]),
                               ),
                             ],
                           );
@@ -510,16 +524,16 @@ class AdminReportsScreen extends ConsumerWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
+                          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey[50],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           report['reason'] ?? 'لا يوجد وصف.',
-                          style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
+                          style: TextStyle(fontSize: 14, height: 1.5, color: isDark ? Colors.grey[300] : Colors.black87),
                         ),
                       ),
                       const SizedBox(height: 16),
-                      // Conversation Button if exists
+                      // Conversation Button
                       if (report['chatId'] != null)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -530,8 +544,8 @@ class AdminReportsScreen extends ConsumerWidget {
                               icon: const Icon(Icons.forum_outlined, size: 18),
                               label: const Text('عرض المحادثة المتعلقة'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.blue[700],
-                                side: BorderSide(color: Colors.blue[100]!),
+                                foregroundColor: isDark ? Colors.blue[300] : Colors.blue[700],
+                                side: BorderSide(color: isDark ? Colors.blue[900]! : Colors.blue[100]!),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                               ),
                             ),
@@ -552,6 +566,7 @@ class AdminReportsScreen extends ConsumerWidget {
                                 icon: Icons.mail_outline,
                                 label: 'مراسلة',
                                 color: Colors.blue,
+                                isDark: isDark,
                                 onTap: () async {
                                   final studentId = await authService.getStudentIdFromUid(targetUserId);
                                   if (context.mounted) _showSendMessageDialog(context, ref, targetUserId, studentId ?? 'مستخدم');
@@ -562,13 +577,15 @@ class AdminReportsScreen extends ConsumerWidget {
                                 icon: Icons.block_flipped,
                                 label: 'حظر نهائي',
                                 color: Colors.red,
+                                isDark: isDark,
                                 onTap: () async {
                                   final studentId = await authService.getStudentIdFromUid(targetUserId);
                                   final confirm = await showDialog<bool>(
                                     context: context,
                                     builder: (dialogCtx) => AlertDialog(
-                                      title: const Text('حظر نهائي'),
-                                      content: Text('هل أنت متأكد من حظر $studentId؟'),
+                                      backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                                      title: Text('حظر نهائي', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                                      content: Text('هل أنت متأكد من حظر $studentId؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
                                       actions: [
                                         TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('إلغاء')),
                                         TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('حظر', style: TextStyle(color: Colors.red))),
@@ -597,8 +614,9 @@ class AdminReportsScreen extends ConsumerWidget {
                               final confirm = await showDialog<bool>(
                                 context: context,
                                 builder: (dialogCtx) => AlertDialog(
-                                  title: const Text('إغلاق التقرير'),
-                                  content: const Text('هل تريد أرشفة/حذف هذا التقرير؟'),
+                                  backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                                  title: Text('إغلاق التقرير', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                                  content: Text('هل تريد أرشفة/حذف هذا التقرير؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
                                   actions: [
                                     TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('إلغاء')),
                                     TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('إغلاق', style: TextStyle(color: Colors.grey))),

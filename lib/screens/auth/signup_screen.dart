@@ -60,13 +60,14 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 30),
             child: Form(
               key: _formKey,
               child: Column(
@@ -77,17 +78,23 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Center(
                     child: Column(
                       children: [
-                        // Clean Logo - No Background Wrapper
                         Image.asset('assets/in/app-logo.png', height: 70),
                         const SizedBox(height: 24),
-                        const Text(
+                        Text(
                           'إنشاء حساب جديد',
-                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: Colors.black87),
+                          style: TextStyle(
+                            fontSize: 28, 
+                            fontWeight: FontWeight.w900, 
+                            color: isDark ? Colors.white : Colors.black87
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           'انضم إلى مجتمع MBYB لتبادل الكتب مع زملائك',
-                          style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                          style: TextStyle(
+                            fontSize: 14, 
+                            color: isDark ? Colors.grey[500] : Colors.grey[500]
+                          ),
                         ),
                       ],
                     ),
@@ -99,7 +106,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       padding: const EdgeInsets.all(16),
                       margin: const EdgeInsets.only(bottom: 24),
                       decoration: BoxDecoration(
-                        color: _errorMessage!.contains('بنجاح') ? Colors.green[50] : Colors.red[50],
+                        color: _errorMessage!.contains('بنجاح') 
+                            ? (isDark ? Colors.green[900]!.withValues(alpha: 0.2) : Colors.green[50])
+                            : (isDark ? Colors.red[900]!.withValues(alpha: 0.2) : Colors.red[50]),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -114,7 +123,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             child: Text(
                               _errorMessage!,
                               style: TextStyle(
-                                color: _errorMessage!.contains('بنجاح') ? Colors.green[700] : Colors.red, 
+                                color: _errorMessage!.contains('بنجاح') 
+                                    ? (isDark ? Colors.green[300] : Colors.green[700]) 
+                                    : (isDark ? Colors.red[300] : Colors.red), 
                                 fontSize: 13,
                               ),
                             ),
@@ -124,23 +135,31 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     ),
 
                   // Email Field
-                  const Text('البريد الجامعي', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    'البريد الجامعي', 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black
+                    )
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _emailController,
                     textAlign: TextAlign.left,
                     textDirection: TextDirection.ltr,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       hintText: 'studentID@st.aabu.edu.jo',
-                      hintStyle: TextStyle(color: Colors.grey[300], fontSize: 14),
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300], fontSize: 14),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      prefixIcon: const Icon(Icons.alternate_email_rounded, size: 20),
+                      prefixIcon: Icon(Icons.alternate_email_rounded, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     ),
                     keyboardType: TextInputType.emailAddress,
                     validator: Validators.validateEmail,
@@ -158,7 +177,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       icon: const Icon(Icons.add_circle_outline, size: 16),
                       label: const Text('@st.aabu.edu.jo', textDirection: TextDirection.ltr),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.green[700],
+                        foregroundColor: isDark ? Colors.green[300] : Colors.green[700],
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                       ),
                     ),
@@ -167,26 +186,34 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   const SizedBox(height: 16),
 
                   // Password Field
-                  const Text('كلمة المرور', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    'كلمة المرور', 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black
+                    )
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     textAlign: TextAlign.left,
                     textDirection: TextDirection.ltr,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      hintStyle: TextStyle(color: Colors.grey[300]),
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300]),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      prefixIcon: const Icon(Icons.lock_outline_rounded, size: 20),
+                      prefixIcon: Icon(Icons.lock_outline_rounded, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 20),
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                         onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
                       ),
                     ),
@@ -196,26 +223,34 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   const SizedBox(height: 16),
 
                   // Confirm Password Field
-                  const Text('تأكيد كلمة المرور', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(
+                    'تأكيد كلمة المرور', 
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontSize: 14,
+                      color: isDark ? Colors.white : Colors.black
+                    )
+                  ),
                   const SizedBox(height: 8),
                   TextFormField(
                     controller: _confirmController,
                     obscureText: _obscureConfirmPassword,
                     textAlign: TextAlign.left,
                     textDirection: TextDirection.ltr,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
                     decoration: InputDecoration(
                       hintText: '••••••••',
-                      hintStyle: TextStyle(color: Colors.grey[300]),
+                      hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300]),
                       filled: true,
-                      fillColor: Colors.grey[50],
+                      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[50],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      prefixIcon: const Icon(Icons.lock_clock_outlined, size: 20),
+                      prefixIcon: Icon(Icons.lock_clock_outlined, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                       suffixIcon: IconButton(
-                        icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility, size: 20),
+                        icon: Icon(_obscureConfirmPassword ? Icons.visibility_off : Icons.visibility, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                         onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                       ),
                     ),
@@ -228,7 +263,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   ElevatedButton(
                     onPressed: _isLoading ? null : _onSignup,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: isDark ? Colors.green[900] : Colors.green[700],
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -245,10 +280,16 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('لديك حساب بالفعل؟', style: TextStyle(color: Colors.grey[600])),
+                      Text('لديك حساب بالفعل؟', style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[600])),
                       TextButton(
                         onPressed: () => context.go('/login'),
-                        child: const Text('تسجيل الدخول', style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(
+                          'تسجيل الدخول', 
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? Colors.teal[300] : Colors.green[700]
+                          )
+                        ),
                       ),
                     ],
                   ),

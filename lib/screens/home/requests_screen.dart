@@ -18,16 +18,18 @@ class _RequestsScreenState extends State<RequestsScreen> {
   final _requestService = RequestService();
   final _authService = AuthService();
 
-  Color _getTypeColor(String postType) {
-    if (postType == 'request') return Colors.purple[600]!;
-    if (postType == 'free') return Colors.green[600]!;
-    return Colors.blue[600]!;
+  Color _getTypeColor(BuildContext context, String postType) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (postType == 'request') return isDark ? Colors.purple[300]! : Colors.purple[600]!;
+    if (postType == 'free') return isDark ? Colors.green[300]! : Colors.green[600]!;
+    return isDark ? Colors.blue[300]! : Colors.blue[600]!;
   }
 
-  Color _getTypeBgColor(String postType) {
-    if (postType == 'request') return Colors.purple[50]!;
-    if (postType == 'free') return Colors.green[50]!;
-    return Colors.blue[50]!;
+  Color _getTypeBgColor(BuildContext context, String postType) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    if (postType == 'request') return isDark ? Colors.purple[900]!.withValues(alpha: 0.2) : Colors.purple[50]!;
+    if (postType == 'free') return isDark ? Colors.green[900]!.withValues(alpha: 0.2) : Colors.green[50]!;
+    return isDark ? Colors.blue[900]!.withValues(alpha: 0.2) : Colors.blue[50]!;
   }
 
   @override
@@ -47,14 +49,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
       textDirection: TextDirection.rtl,
       child: TabBarView(
         children: [
-          _buildReceivedRequests(currentUser),
-          _buildSentRequests(currentUser),
+          _buildReceivedRequests(context, currentUser),
+          _buildSentRequests(context, currentUser),
         ],
       ),
     );
   }
 
-  Widget _buildReceivedRequests(User currentUser) {
+  Widget _buildReceivedRequests(BuildContext context, User currentUser) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<List<RequestModel>>(
       stream: _requestService.getIncomingRequests(currentUser.uid),
       builder: (streamContext, snapshot) {
@@ -79,8 +82,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
           itemCount: requests.length,
           itemBuilder: (listContext, index) {
             final req = requests[index];
-            final typeColor = _getTypeColor(req.postType);
-            final typeBg = _getTypeBgColor(req.postType);
+            final typeColor = _getTypeColor(context, req.postType);
+            final typeBg = _getTypeBgColor(context, req.postType);
 
             return Column(
               children: [
@@ -89,11 +92,11 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   leading: CircleAvatar(
                     radius: 24,
                     backgroundColor: typeBg,
-                    child: Icon(Icons.person, color: typeColor, size: 24),
+                    child: Icon(Icons.person_outline, color: typeColor, size: 24),
                   ),
                   title: RichText(
                     text: TextSpan(
-                      style: const TextStyle(color: Colors.black, fontSize: 14, height: 1.4),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14, height: 1.4),
                       children: [
                         TextSpan(
                           text: req.requesterStudentId,
@@ -115,23 +118,23 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
                       'في: ${req.timestamp.toString().substring(0, 10)}',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      style: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[500], fontSize: 12),
                     ),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Reject Button
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.grey, size: 22),
+                        icon: Icon(Icons.close, color: isDark ? Colors.grey[700] : Colors.grey, size: 22),
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
                             context: context,
                             builder: (dialogContext) => Directionality(
                               textDirection: TextDirection.rtl,
                               child: AlertDialog(
-                                title: const Text('رفض الطلب'),
-                                content: const Text('هل أنت متأكد أنك تريد رفض هذا الطلب؟'),
+                                backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                                title: Text('رفض الطلب', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                                content: Text('هل أنت متأكد أنك تريد رفض هذا الطلب؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -163,7 +166,6 @@ class _RequestsScreenState extends State<RequestsScreen> {
                         },
                       ),
                       const SizedBox(width: 4),
-                      // Accept Button
                       ElevatedButton(
                         onPressed: () async {
                           final confirm = await showDialog<bool>(
@@ -171,8 +173,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                             builder: (dialogContext) => Directionality(
                               textDirection: TextDirection.rtl,
                               child: AlertDialog(
-                                title: const Text('قبول الطلب'),
-                                content: const Text('عند القبول، سيتم فتح محادثة مع الطالب.'),
+                                backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                                title: Text('قبول الطلب', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                                content: Text('عند القبول، سيتم فتح محادثة مع الطالب.', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.of(dialogContext).pop(false),
@@ -225,7 +228,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[600],
+                          backgroundColor: isDark ? Colors.green[900] : Colors.green[600],
                           foregroundColor: Colors.white,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -237,7 +240,12 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     ],
                   ),
                 ),
-                Divider(height: 1, thickness: 1, color: Colors.grey[100], indent: 16),
+                Divider(
+                  height: 1, 
+                  thickness: 1, 
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100], 
+                  indent: 16
+                ),
               ],
             );
           },
@@ -246,7 +254,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
     );
   }
 
-  Widget _buildSentRequests(User currentUser) {
+  Widget _buildSentRequests(BuildContext context, User currentUser) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return StreamBuilder<List<RequestModel>>(
       stream: _requestService.getOutgoingRequests(currentUser.uid),
       builder: (context, snapshot) {
@@ -271,8 +280,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
           itemCount: requests.length,
           itemBuilder: (context, index) {
             final req = requests[index];
-            final typeColor = _getTypeColor(req.postType);
-            final typeBg = _getTypeBgColor(req.postType);
+            final typeColor = _getTypeColor(context, req.postType);
+            final typeBg = _getTypeBgColor(context, req.postType);
 
             return Column(
               children: [
@@ -285,7 +294,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                   ),
                   title: RichText(
                     text: TextSpan(
-                      style: const TextStyle(color: Colors.black, fontSize: 14, height: 1.4),
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black, fontSize: 14, height: 1.4),
                       children: [
                         const TextSpan(text: 'لقد قمت بـ '),
                         TextSpan(
@@ -302,7 +311,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
                     padding: const EdgeInsets.only(top: 4.0),
                     child: Text(
                       'بانتظار الرد • ${req.timestamp.toString().substring(0, 10)}',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      style: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[500], fontSize: 12),
                     ),
                   ),
                   trailing: TextButton(
@@ -312,8 +321,9 @@ class _RequestsScreenState extends State<RequestsScreen> {
                         builder: (ctx) => Directionality(
                           textDirection: TextDirection.rtl,
                           child: AlertDialog(
-                            title: const Text('إلغاء الطلب'),
-                            content: const Text('هل أنت متأكد أنك تريد إلغاء هذا الطلب؟'),
+                            backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+                            title: Text('إلغاء الطلب', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+                            content: Text('هل أنت متأكد أنك تريد إلغاء هذا الطلب؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
                             actions: [
                               TextButton(
                                 onPressed: () => Navigator.of(ctx).pop(false),
@@ -341,10 +351,15 @@ class _RequestsScreenState extends State<RequestsScreen> {
                         }
                       }
                     },
-                    child: Text('إلغاء', style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                    child: Text('إلغاء', style: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[600], fontSize: 13)),
                   ),
                 ),
-                Divider(height: 1, thickness: 1, color: Colors.grey[100], indent: 16),
+                Divider(
+                  height: 1, 
+                  thickness: 1, 
+                  color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100], 
+                  indent: 16
+                ),
               ],
             );
           },

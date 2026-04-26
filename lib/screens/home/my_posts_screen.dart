@@ -11,6 +11,8 @@ class MyPostsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(authStateProvider).value;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (currentUser == null) return const Scaffold(body: Center(child: Text('يرجى تسجيل الدخول')));
 
     final bookService = ref.read(bookServiceProvider);
@@ -18,15 +20,11 @@ class MyPostsScreen extends ConsumerWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
             'منشوراتي',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
         ),
         body: StreamBuilder<List<BookModel>>(
           stream: bookService.getBooksByPublisher(currentUser.uid),
@@ -46,11 +44,15 @@ class MyPostsScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.library_books_outlined, size: 64, color: Colors.grey[300]),
+                    Icon(
+                      Icons.library_books_outlined, 
+                      size: 64, 
+                      color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]
+                    ),
                     const SizedBox(height: 16),
-                    const Text(
+                    Text(
                       'لم تقم بنشر أي كتاب بعد.',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
+                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey, fontSize: 16),
                     ),
                   ],
                 ),

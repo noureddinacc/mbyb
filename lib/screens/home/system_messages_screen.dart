@@ -10,6 +10,8 @@ class SystemMessagesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(authStateProvider).value;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     if (currentUser == null) return const Scaffold(body: Center(child: Text('يرجى تسجيل الدخول')));
 
     final messageService = ref.read(systemMessageServiceProvider);
@@ -17,15 +19,11 @@ class SystemMessagesScreen extends ConsumerWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text(
             'رسائل الإدارة',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          elevation: 0,
-          backgroundColor: Colors.white,
-          foregroundColor: Colors.black,
         ),
         body: StreamBuilder<List<Map<String, dynamic>>>(
           stream: messageService.getUserMessages(currentUser.uid),
@@ -53,11 +51,15 @@ class SystemMessagesScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.mark_email_read_outlined, size: 64, color: Colors.grey[300]),
+                    Icon(
+                      Icons.mark_email_read_outlined, 
+                      size: 64, 
+                      color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'لا توجد رسائل من الإدارة حالياً.',
-                      style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey[500], fontSize: 16),
                     ),
                   ],
                 ),
@@ -81,10 +83,10 @@ class SystemMessagesScreen extends ConsumerWidget {
                   key: Key(msg['id']),
                   direction: DismissDirection.startToEnd,
                   background: Container(
-                    color: Colors.red[50],
+                    color: isDark ? Colors.red[900]!.withValues(alpha: 0.2) : Colors.red[50],
                     alignment: AlignmentDirectional.centerStart,
                     padding: const EdgeInsetsDirectional.only(start: 20),
-                    child: Icon(Icons.delete_outline, color: Colors.red[700]),
+                    child: Icon(Icons.delete_outline, color: isDark ? Colors.red[300] : Colors.red[700]),
                   ),
                   onDismissed: (direction) {
                     final messageData = Map<String, dynamic>.from(msg);
@@ -116,17 +118,17 @@ class SystemMessagesScreen extends ConsumerWidget {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.green[50],
+                                    color: isDark ? Colors.green[900]!.withValues(alpha: 0.2) : Colors.green[50],
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.verified_user, color: Colors.green[700], size: 14),
+                                      Icon(Icons.verified_user, color: isDark ? Colors.green[300] : Colors.green[700], size: 14),
                                       const SizedBox(width: 6),
                                       Text(
                                         'مسؤول النظام',
                                         style: TextStyle(
-                                          color: Colors.green[700],
+                                          color: isDark ? Colors.green[300] : Colors.green[700],
                                           fontWeight: FontWeight.bold,
                                           fontSize: 12,
                                         ),
@@ -138,7 +140,7 @@ class SystemMessagesScreen extends ConsumerWidget {
                                   children: [
                                     Text(
                                       dateStr,
-                                      style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                                      style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[600] : Colors.grey[500]),
                                     ),
                                     if (!isRead) ...[
                                       const SizedBox(width: 8),
@@ -158,16 +160,22 @@ class SystemMessagesScreen extends ConsumerWidget {
                             const SizedBox(height: 16),
                             Text(
                               msg['message'] ?? '',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 15,
                                 height: 1.5,
-                                color: Colors.black87,
+                                color: isDark ? Colors.grey[300] : Colors.black87,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Divider(height: 1, thickness: 1, color: Colors.grey[100], indent: 20, endIndent: 20),
+                      Divider(
+                        height: 1, 
+                        thickness: 1, 
+                        color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100], 
+                        indent: 20, 
+                        endIndent: 20
+                      ),
                     ],
                   ),
                 );

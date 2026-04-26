@@ -16,6 +16,7 @@ import '../../providers/service_providers.dart';
 import '../../providers/book_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../providers/admin_provider.dart';
+import '../../providers/theme_provider.dart'; // Added theme provider
 import '../admin/admin_reports_screen.dart';
 import 'system_messages_screen.dart';
 import 'package:go_router/go_router.dart';
@@ -71,8 +72,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     ];
     showModalBottomSheet(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return Consumer(
@@ -216,7 +217,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ? Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: Theme.of(context).brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
@@ -225,7 +226,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     onChanged: (val) {
                       ref.read(searchQueryProvider.notifier).setQuery(val);
                     },
-                    style: const TextStyle(color: Colors.black, fontSize: 14),
+                    style: TextStyle(color: Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white, fontSize: 14),
                     decoration: const InputDecoration(
                       hintText: 'بحث...',
                       border: InputBorder.none,
@@ -288,9 +289,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         return AppBar(
           title: const Text('الطلبات'),
           bottom: TabBar(
-            labelColor: Theme.of(context).primaryColor,
-            unselectedLabelColor: Colors.grey[400],
-            indicatorColor: Theme.of(context).primaryColor,
+            labelColor: Theme.of(context).colorScheme.primary,
+            unselectedLabelColor: Colors.grey,
+            indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorWeight: 3,
             labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
             unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 15),
@@ -337,41 +338,42 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   Widget _buildDrawer(dynamic currentUser) {
     if (currentUser == null) return const SizedBox.shrink();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Drawer(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       child: Column(
         children: [
           // Premium Airy Header
           Container(
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
             decoration: BoxDecoration(
-              color: Colors.green[50]?.withValues(alpha: 0.5),
+              color: isDark ? Colors.teal.withValues(alpha: 0.1) : Colors.green[50]?.withValues(alpha: 0.5),
             ),
             child: Row(
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: Colors.green[100],
-                  child: Icon(Icons.person, color: Colors.green[700], size: 30),
+                  backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
+                  child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'مرحباً بك',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
+                        style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey, fontSize: 12),
                       ),
                       Directionality(
                         textDirection: TextDirection.ltr,
                         child: Text(
                           currentUser.email ?? 'مستخدم',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
+                            color: isDark ? Colors.white : Colors.black87,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -390,7 +392,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             icon: Icons.home_rounded,
             label: 'الرئيسية',
             color: Colors.teal,
-            isSelected: false,
+            isSelected: _selectedIndex == 0,
             showBackground: false,
             onTap: () {
               Navigator.pop(context);
@@ -417,9 +419,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             _buildDrawerItem(
               icon: Icons.admin_panel_settings_rounded,
               label: 'إدارة التقارير',
-              color: Colors.teal, // Uniform Teal Color
+              color: Colors.teal,
               isSelected: false,
-              showBackground: false, // No background for minimalist look
+              showBackground: false,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -430,8 +432,35 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
           
           const Spacer(),
+
+          // Dark Mode Toggle - Option 1: Bottom of Drawer
+          Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: ListTile(
+              leading: Icon(
+                isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                color: isDark ? Colors.teal[300] : Colors.orange[400],
+              ),
+              title: Text(
+                'الوضع الليلي',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: isDark ? Colors.white : Colors.black87,
+                ),
+              ),
+              trailing: Switch.adaptive(
+                value: isDark,
+                activeColor: Colors.teal[300],
+                onChanged: (val) {
+                  ref.read(themeModeProvider.notifier).toggleTheme(val);
+                },
+              ),
+            ),
+          ),
+
           // Logout Section
-          Divider(color: Colors.grey[100], height: 1),
+          Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
           _buildDrawerItem(
             icon: Icons.logout_rounded,
             label: 'تسجيل الخروج',
@@ -467,8 +496,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            'MBYB v1.2.0',
-            style: TextStyle(color: Colors.grey[300], fontSize: 10),
+            'MBYB v2.0.0', // Updated version to celebrate UI 2.0
+            style: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300], fontSize: 10),
           ),
           const SizedBox(height: 20),
         ],
@@ -484,6 +513,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     bool showBackground = true,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: ListTile(
@@ -493,14 +523,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             color: showBackground ? color.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: color, size: 20),
+          child: Icon(icon, color: isSelected ? color : (isDark ? Colors.grey[400] : color), size: 20),
         ),
         title: Text(
           label,
           style: TextStyle(
             fontSize: 15,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? color : Colors.black87,
+            color: isSelected ? color : (isDark ? Colors.white : Colors.black87),
           ),
         ),
         selected: isSelected,
@@ -515,7 +545,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: _buildAppBar(currentUser),
-        drawer: _selectedIndex == 0 ? _buildDrawer(currentUser) : null,
+        drawer: _buildDrawer(currentUser), // Enabled drawer for all screens for easy theme access
         body: IndexedStack(
           index: _selectedIndex,
           children: _screens,
@@ -526,16 +556,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           type: BottomNavigationBarType.fixed,
           items: [
             const BottomNavigationBarItem(
-              icon: Icon(Icons.home),
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
               label: 'الرئيسية',
             ),
             const BottomNavigationBarItem(
               icon: Icon(Icons.add_circle_outline),
+              activeIcon: Icon(Icons.add_circle),
               label: 'نشر',
             ),
             BottomNavigationBarItem(
               icon: currentUser == null
-                  ? const Icon(Icons.notifications)
+                  ? const Icon(Icons.notifications_outlined)
                   : StreamBuilder<List<RequestModel>>(
                       stream: RequestService().getIncomingRequests(
                         currentUser.uid,
@@ -546,15 +578,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           isLabelVisible: count > 0,
                           label: Text(count.toString()),
                           backgroundColor: Colors.red,
-                          child: const Icon(Icons.notifications),
+                          child: const Icon(Icons.notifications_outlined),
                         );
                       },
                     ),
+              activeIcon: const Icon(Icons.notifications),
               label: 'الطلبات',
             ),
             BottomNavigationBarItem(
               icon: currentUser == null
-                  ? const Icon(Icons.chat)
+                  ? const Icon(Icons.chat_outlined)
                   : StreamBuilder<List<ChatModel>>(
                       stream: ChatService().getActiveChats(currentUser.uid),
                       builder: (context, snapshot) {
@@ -570,14 +603,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           isLabelVisible: unreadCount > 0,
                           label: Text(unreadCount.toString()),
                           backgroundColor: Colors.red,
-                          child: const Icon(Icons.chat),
+                          child: const Icon(Icons.chat_outlined),
                         );
                       },
                     ),
+              activeIcon: const Icon(Icons.chat),
               label: 'المحادثات',
             ),
             const BottomNavigationBarItem(
-              icon: Icon(Icons.info),
+              icon: Icon(Icons.info_outline),
+              activeIcon: Icon(Icons.info),
               label: 'الإرشادات',
             ),
           ],

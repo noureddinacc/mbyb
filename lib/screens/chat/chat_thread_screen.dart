@@ -104,25 +104,29 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
 
   void _showReportDialog() {
     final controller = TextEditingController();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     showDialog(
       context: context,
       builder: (ctx) => Directionality(
         textDirection: ui.TextDirection.rtl,
         child: AlertDialog(
-          title: Text('الإبلاغ عن $_otherStudentId'),
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+          title: Text('الإبلاغ عن $_otherStudentId', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('يرجى وصف سبب الإبلاغ عن هذا المستخدم:'),
+              Text('يرجى وصف سبب الإبلاغ عن هذا المستخدم:', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
               const SizedBox(height: 12),
               TextField(
                 controller: controller,
                 maxLines: 3,
+                style: TextStyle(color: isDark ? Colors.white : Colors.black),
                 decoration: InputDecoration(
                   hintText: 'أدخل التقرير...',
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -190,14 +194,17 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   }
 
   void _closeTrade() async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => Directionality(
         textDirection: ui.TextDirection.rtl,
         child: AlertDialog(
-          title: const Text('إغلاق المبادلة'),
-          content: const Text(
+          backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
+          title: Text('إغلاق المبادلة', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+          content: Text(
             'هل أنت متأكد؟ لن يتمكن أي طرف من إرسال رسائل بعد ذلك.',
+            style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87),
           ),
           actions: [
             TextButton(
@@ -241,6 +248,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = _authService.currentUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     if (currentUser == null) {
       return const Directionality(
@@ -265,7 +273,6 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         return Directionality(
           textDirection: ui.TextDirection.rtl,
           child: Scaffold(
-            backgroundColor: Colors.white,
             appBar: AppBar(
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,7 +282,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     chat.bookTitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: isDark ? Colors.grey[400] : Colors.grey[600],
                       fontWeight: FontWeight.normal,
                     ),
                     maxLines: 1,
@@ -333,7 +340,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             ),
             body: Column(
               children: [
-                // Modern Safety Note - Now in Green
+                // Safety Note
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.symmetric(
@@ -342,15 +349,15 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                   ),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: isDark ? Colors.green[900]!.withValues(alpha: 0.2) : Colors.green[50],
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.green[100]!),
+                    border: Border.all(color: isDark ? Colors.green[800]!.withValues(alpha: 0.3) : Colors.green[100]!),
                   ),
                   child: Row(
                     children: [
                       Icon(
                         Icons.info_outline,
-                        color: Colors.green[700],
+                        color: isDark ? Colors.green[300] : Colors.green[700],
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -358,7 +365,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         child: Text(
                           'يرجى التحلي بالاحترام واتباع الإرشادات. يمكنك إغلاق المبادلة عند الإنتهاء من قائمة النقاط الثلاث أعلاه.',
                           style: TextStyle(
-                            color: Colors.green[900],
+                            color: isDark ? Colors.green[100] : Colors.green[900],
                             fontSize: 12,
                             height: 1.4,
                           ),
@@ -394,16 +401,16 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         itemBuilder: (context, index) {
                           final message = messages[index];
                           final isMe = message.senderId == currentUser.uid;
-                          return _buildMessageBubble(message, isMe);
+                          return _buildMessageBubble(context, message, isMe);
                         },
                       );
                     },
                   ),
                 ),
                 if (isClosed)
-                  _buildClosedNotice(chat.closedByStudentId)
+                  _buildClosedNotice(context, chat.closedByStudentId)
                 else
-                  _buildMessageInput(),
+                  _buildMessageInput(context),
               ],
             ),
           ),
@@ -412,16 +419,17 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     );
   }
 
-  Widget _buildClosedNotice(String? closedBy) {
+  Widget _buildClosedNotice(BuildContext context, String? closedBy) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      color: Colors.grey[50],
+      color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey[50],
       child: Center(
         child: Text(
           'تم إغلاق المبادلة بواسطة ${closedBy ?? 'مستخدم'}',
           style: TextStyle(
-            color: Colors.grey[600],
+            color: isDark ? Colors.grey[500] : Colors.grey[600],
             fontStyle: ui.FontStyle.italic,
           ),
         ),
@@ -429,7 +437,8 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, bool isMe) {
+  Widget _buildMessageBubble(BuildContext context, ChatMessage message, bool isMe) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Column(
@@ -441,7 +450,9 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             margin: const EdgeInsets.symmetric(vertical: 4),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isMe ? const Color(0xFF2E7D32) : const Color(0xFFF1F1F1),
+              color: isMe 
+                  ? (isDark ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32)) 
+                  : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFF1F1F1)),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -452,7 +463,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             child: Text(
               message.text,
               style: TextStyle(
-                color: isMe ? Colors.white : Colors.black87,
+                color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
                 fontSize: 15,
               ),
             ),
@@ -461,7 +472,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               DateFormat('h:mm a').format(message.sentAt),
-              style: TextStyle(color: Colors.grey[400], fontSize: 10),
+              style: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 10),
             ),
           ),
         ],
@@ -469,12 +480,13 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     );
   }
 
-  Widget _buildMessageInput() {
+  Widget _buildMessageInput(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Color(0xFFF1F1F1))),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(top: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF1F1F1))),
       ),
       child: Row(
         children: [
@@ -482,11 +494,12 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             child: TextField(
               controller: _messageController,
               maxLines: null,
+              style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: 'اكتب رسالة...',
-                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+                hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 14),
                 filled: true,
-                fillColor: const Color(0xFFF8F8F8),
+                fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF8F8F8),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 10,
@@ -503,7 +516,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
             onTap: _sendMessage,
             child: CircleAvatar(
               radius: 22,
-              backgroundColor: const Color(0xFF2E7D32),
+              backgroundColor: isMe_backgroundColor(context),
               child: const Icon(
                 Icons.send_rounded,
                 color: Colors.white,
@@ -514,5 +527,10 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
         ],
       ),
     );
+  }
+
+  Color isMe_backgroundColor(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return isDark ? const Color(0xFF2E7D32) : const Color(0xFF2E7D32);
   }
 }

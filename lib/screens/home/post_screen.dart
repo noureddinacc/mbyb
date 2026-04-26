@@ -121,6 +121,8 @@ class _PostScreenState extends State<PostScreen> {
 
   Widget _buildTypeSelector(String type, String label, Color selectedColor) {
     final isSelected = _bookType == type;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Expanded(
       child: GestureDetector(
         onTap: () => setState(() => _bookType = type),
@@ -129,7 +131,7 @@ class _PostScreenState extends State<PostScreen> {
           margin: const EdgeInsets.symmetric(horizontal: 4),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? selectedColor : Colors.grey[100],
+            color: isSelected ? selectedColor : (isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100]),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected ? selectedColor : Colors.transparent,
@@ -141,7 +143,7 @@ class _PostScreenState extends State<PostScreen> {
               label,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.grey[600],
+                color: isSelected ? Colors.white : (isDark ? Colors.grey[500] : Colors.grey[600]),
                 fontSize: 14,
               ),
             ),
@@ -152,13 +154,14 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   InputDecoration _buildInputDecoration(String hintText, {String? helperText}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InputDecoration(
       filled: true,
-      fillColor: Colors.grey[100],
+      fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
       hintText: hintText,
-      hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14),
+      hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[400], fontSize: 14),
       helperText: helperText,
-      helperStyle: TextStyle(color: Colors.grey[500], fontSize: 12),
+      helperStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[500], fontSize: 12),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -166,7 +169,7 @@ class _PostScreenState extends State<PostScreen> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: Colors.blue[300]!, width: 1.5),
+        borderSide: BorderSide(color: isDark ? Colors.teal[700]! : Colors.blue[300]!, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
@@ -176,16 +179,17 @@ class _PostScreenState extends State<PostScreen> {
   }
 
   Widget _buildSectionTitle(String title, {bool isRequired = false}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8, right: 4),
       child: Row(
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
+              color: isDark ? Colors.white : Colors.black87,
             ),
           ),
           if (isRequired)
@@ -200,6 +204,8 @@ class _PostScreenState extends State<PostScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SafeArea(
@@ -217,13 +223,13 @@ class _PostScreenState extends State<PostScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.red[50],
+                          color: isDark ? Colors.red[900]!.withValues(alpha: 0.2) : Colors.red[50],
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: Colors.red[200]!),
                         ),
                         child: Text(
                           _errorMessage!,
-                          style: TextStyle(color: Colors.red[700]),
+                          style: TextStyle(color: isDark ? Colors.red[300] : Colors.red[700]),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -232,9 +238,9 @@ class _PostScreenState extends State<PostScreen> {
                     _buildSectionTitle('نوع المنشور', isRequired: true),
                     Row(
                       children: [
-                        _buildTypeSelector('free', 'مجاني', Colors.green[600]!),
-                        _buildTypeSelector('exchange', 'تبادل', Colors.blue[600]!),
-                        _buildTypeSelector('request', 'مطلوب', Colors.purple[600]!),
+                        _buildTypeSelector('free', 'مجاني', isDark ? Colors.green[900]! : Colors.green[600]!),
+                        _buildTypeSelector('exchange', 'تبادل', isDark ? Colors.blue[900]! : Colors.blue[600]!),
+                        _buildTypeSelector('request', 'مطلوب', isDark ? Colors.purple[900]! : Colors.purple[600]!),
                       ],
                     ),
                     const SizedBox(height: 28),
@@ -243,11 +249,16 @@ class _PostScreenState extends State<PostScreen> {
                     DropdownButtonFormField(
                       value: _selectedFaculty,
                       isExpanded: true,
+                      dropdownColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
                       icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                       items: faculties.map((faculty) {
                         return DropdownMenuItem(
                           value: faculty,
-                          child: Text(faculty, overflow: TextOverflow.ellipsis),
+                          child: Text(
+                            faculty, 
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                          ),
                         );
                       }).toList(),
                       onChanged: (value) {
@@ -269,6 +280,7 @@ class _PostScreenState extends State<PostScreen> {
                     TextFormField(
                       controller: _titleController,
                       maxLength: _titleMaxLength,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                       decoration: _buildInputDecoration(
                         'مثال: كتاب التفاضل والتكامل 101',
                         helperText: 'الحد الأقصى $_titleMaxLength حرفاً',
@@ -286,6 +298,7 @@ class _PostScreenState extends State<PostScreen> {
                     TextFormField(
                       controller: _authorController,
                       maxLength: _authorMaxLength,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                       decoration: _buildInputDecoration(
                         'اسم مؤلف الكتاب',
                         helperText: 'الحد الأقصى $_authorMaxLength حرفاً',
@@ -298,6 +311,7 @@ class _PostScreenState extends State<PostScreen> {
                       controller: _descriptionController,
                       maxLines: 3,
                       maxLength: 150,
+                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                       decoration: _buildInputDecoration(
                         'أضف أي تفاصيل أخرى عن الكتاب...',
                         helperText: 'الحد الأقصى 150 حرفاً',
@@ -311,6 +325,7 @@ class _PostScreenState extends State<PostScreen> {
                         value: _conditionController.text.isEmpty
                             ? null
                             : _conditionController.text,
+                        dropdownColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
                         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
                         items: _conditions.map((condition) {
                           return DropdownMenuItem(
@@ -320,10 +335,13 @@ class _PostScreenState extends State<PostScreen> {
                                 Icon(
                                   BookIcons.getConditionIcon(condition),
                                   size: 18,
-                                  color: Colors.grey[600],
+                                  color: isDark ? Colors.grey[400] : Colors.grey[600],
                                 ),
                                 const SizedBox(width: 12),
-                                Text(condition),
+                                Text(
+                                  condition,
+                                  style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                                ),
                               ],
                             ),
                           );
@@ -348,23 +366,23 @@ class _PostScreenState extends State<PostScreen> {
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.blue[50],
+                          color: isDark ? Colors.blue[900]!.withValues(alpha: 0.2) : Colors.blue[50],
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.blue[100]!),
+                          border: Border.all(color: isDark ? Colors.blue[800]! : Colors.blue[100]!),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.swap_horiz, color: Colors.blue[700], size: 20),
+                                Icon(Icons.swap_horiz, color: isDark ? Colors.blue[300] : Colors.blue[700], size: 20),
                                 const SizedBox(width: 8),
                                 Text(
                                   'تفاصيل المبادلة',
                                   style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.blue[900],
+                                    color: isDark ? Colors.blue[200] : Colors.blue[900],
                                   ),
                                 ),
                               ],
@@ -374,19 +392,20 @@ class _PostScreenState extends State<PostScreen> {
                               controller: _exchangeDetailsController,
                               maxLength: _exchangeDetailsMaxLength,
                               maxLines: 2,
+                              style: TextStyle(color: isDark ? Colors.white : Colors.black87),
                               decoration: InputDecoration(
                                 filled: true,
-                                fillColor: Colors.white,
+                                fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white,
                                 hintText: 'ما الكتاب الذي تريده في المقابل؟',
-                                hintStyle: TextStyle(color: Colors.grey[400], fontSize: 13),
+                                hintStyle: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[400], fontSize: 13),
                                 contentPadding: const EdgeInsets.all(12),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.blue[200]!),
+                                  borderSide: BorderSide(color: isDark ? Colors.blue[900]! : Colors.blue[200]!),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: Colors.blue[400]!, width: 1.5),
+                                  borderSide: BorderSide(color: isDark ? Colors.blue[700]! : Colors.blue[400]!, width: 1.5),
                                 ),
                               ),
                               validator: (value) {
@@ -406,11 +425,11 @@ class _PostScreenState extends State<PostScreen> {
                     
                     SizedBox(
                       width: double.infinity,
-                      height: 54, // Taller button for modern look
+                      height: 54,
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _onPostBook,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[600],
+                          backgroundColor: isDark ? Colors.green[900] : Colors.green[600],
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
