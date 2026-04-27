@@ -20,4 +20,12 @@ class UniversityService {
     }
     return null;
   }
+  /// Stream of all supported universities
+  Stream<List<University>> getUniversitiesStream() {
+    return _firestore.collection('Universities').snapshots().map((snapshot) {
+      return snapshot.docs
+          .map((doc) => University.fromMap(doc.id, doc.data()))
+          .toList();
+    });
+  }
 }

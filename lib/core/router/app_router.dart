@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/service_providers.dart';
 import '../../screens/auth/login_screen.dart';
 import '../../screens/auth/signup_screen.dart';
 import '../../screens/home/main_screen.dart';
@@ -14,6 +15,7 @@ import 'package:flutter/foundation.dart';
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this.ref) {
     ref.listen(authStateProvider, (_, _) => notifyListeners());
+    ref.listen(universitiesProvider, (_, _) => notifyListeners());
   }
   final Ref ref;
 }
@@ -26,24 +28,40 @@ final routerProvider = Provider<GoRouter>((ref) {
     refreshListenable: notifier,
     redirect: (context, state) {
       final authState = ref.read(authStateProvider);
-
-      if (authState.isLoading) return null; // Wait until init finishes
+      if (authState.isLoading) return null; // Wait for auth init
 
       final user = authState.value;
       final isAuth = user != null;
       final isVerified = user?.emailVerified ?? false;
-      final isAdmin = user?.email == 'solosoulacc@tutamail.com';
+      final userEmail = user?.email?.toLowerCase();
+
+      // Fast-path: master admin never gets blocked
+      if (userEmail == 'solosoulacc@tutamail.com') {
+        return (isAuth && state.uri.path == '/login') ? '/home' : null;
+      }
+
+      // Wait for universities to load before checking uni-admin status
+      final universitiesState = ref.read(universitiesProvider);
+      if (universitiesState.isLoading) return null;
+
+      final universities = universitiesState.value ?? [];
+      final isUniAdmin = universities.any((u) =>
+        u.adminEmails.any((e) => e.toLowerCase() == userEmail)
+      );
+      final isAdmin = isUniAdmin;
+
+      if (kDebugMode && isAuth) {
+        print('Router [$userEmail] verified=$isVerified admin=$isAdmin unis=${universities.length}');
+      }
+
       final isLoggingIn =
           state.uri.path == '/login' || state.uri.path == '/signup';
 
       if (!isAuth || (!isVerified && !isAdmin)) {
-        // Redirect to login if not authenticated OR not verified (admin is exempt)
         return isLoggingIn ? null : '/login';
       }
 
-      if (isLoggingIn) {
-        return '/home';
-      }
+      if (isLoggingIn) return '/home';
 
       return null;
     },

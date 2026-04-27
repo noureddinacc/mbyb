@@ -3,39 +3,51 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is authenticated and has a valid email domain
+    // Helper function to check if user is authenticated
     function isAuthenticated() {
-      return request.auth != null && (
-        request.auth.token.email.matches('.*@st\\.aabu\\.edu\\.jo') || 
-        request.auth.token.email == 'solosoulacc@tutamail.com'
-      );
+      return request.auth != null;
     }
 
-    // Robust Admin Check
+    // Dynamic Admin Check: Checks if user is the master admin OR is listed as an admin for their university
     function isAdmin() {
-      return request.auth != null && (
-        request.auth.token.email == 'solosoulacc@tutamail.com' ||
-        (exists(/databases/$(database)/documents/Users/$(request.auth.uid)) && 
-         get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.email == 'solosoulacc@tutamail.com')
+      let isMasterAdmin = request.auth.token.email == 'solosoulacc@tutamail.com';
+      // Use getAfter for writes if necessary, but here we just need to be careful with nulls
+      let userDoc = get(/databases/$(database)/documents/Users/$(request.auth.uid));
+      
+      return isAuthenticated() && (
+        isMasterAdmin || 
+        (userDoc != null && 
+         userDoc.data != null && 
+         userDoc.data.get('universityId', '') != '' &&
+         request.auth.token.email in get(/databases/$(database)/documents/Universities/$(userDoc.data.universityId)).data.adminEmails)
       );
     }
 
     // Helper function to check if user is NOT blocked
     function isNotBlocked() {
+      let userDoc = get(/databases/$(database)/documents/Users/$(request.auth.uid));
       return isAuthenticated() && (
-        isAdmin() ||
-        !exists(/databases/$(database)/documents/Users/$(request.auth.uid)) || 
-        get(/databases/$(database)/documents/Users/$(request.auth.uid)).data.get('isBlocked', false) == false
+        request.auth.token.email == 'solosoulacc@tutamail.com' || // Fast path for master admin
+        userDoc == null || // Allow if profile doesn't exist yet (signup flow)
+        userDoc.data == null ||
+        userDoc.data.get('isBlocked', false) == false
       );
     }
 
-    // Users collection
+    // 1. Universities collection (Public Read for Signup)
+    match /Universities/{uniId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == 'solosoulacc@tutamail.com';
+    }
+
+    // 2. Users collection
     match /Users/{userId} {
       allow read: if isAuthenticated();
+      // Only check isAdmin if the user is NOT editing their own profile to avoid circularity
       allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
     }
 
-    // Books collection
+    // 3. Books collection
     match /books/{bookId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isNotBlocked() && request.resource.data.publisherId == request.auth.uid;
@@ -45,7 +57,7 @@ service cloud.firestore {
       );
     }
 
-    // Requests collection
+    // 4. Requests collection
     match /requests/{requestId} {
       allow read: if isAuthenticated() && (
         request.auth.uid == resource.data.requesterId ||
@@ -60,7 +72,7 @@ service cloud.firestore {
       );
     }
 
-    // Chats collection
+    // 5. Chats collection
     match /chats/{chatId} {
       allow read: if isAuthenticated() && (
         request.auth.uid in resource.data.participantIds ||
@@ -83,18 +95,13 @@ service cloud.firestore {
       }
     }
 
-    // Reports collection
+    // 6. Reports collection
     match /reports/{reportId} {
-      // Prevent reporting the admin, and enforce that reporterId matches the auth token
-      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid && (
-        (request.resource.data.targetType == 'user' && get(/databases/$(database)/documents/Users/$(request.resource.data.targetId)).data.email != 'solosoulacc@tutamail.com') ||
-        (request.resource.data.targetType == 'book' && get(/databases/$(database)/documents/books/$(request.resource.data.targetId)).data.get('publisherEmail', '') != 'solosoulacc@tutamail.com') ||
-        (request.resource.data.targetType != 'user' && request.resource.data.targetType != 'book')
-      );
+      allow create: if isAuthenticated() && request.resource.data.reporterId == request.auth.uid;
       allow read, delete: if isAdmin();
     }
 
-    // System Messages (Admin to User)
+    // 7. System Messages
     match /system_messages/{messageId} {
       allow read, write: if isAdmin();
       allow read, delete: if isAuthenticated() && resource.data.recipientId == request.auth.uid;

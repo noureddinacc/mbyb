@@ -1,6 +1,7 @@
 class BookModel {
   final String id;
   final String publisherId;
+  final String universityId;
   final String title;
   final String author;
   final String faculty;
@@ -14,6 +15,7 @@ class BookModel {
   BookModel({
     required this.id,
     required this.publisherId,
+    required this.universityId,
     required this.title,
     required this.author,
     required this.faculty,
@@ -30,6 +32,7 @@ class BookModel {
     return {
       'id': id,
       'publisherId': publisherId,
+      'universityId': universityId,
       'title': title,
       'author': author,
       'faculty': faculty,
@@ -47,6 +50,7 @@ class BookModel {
     return BookModel(
       id: docId,
       publisherId: map['publisherId'] ?? '',
+      universityId: map['universityId'] ?? '',
       title: map['title'] ?? '',
       author: map['author'] ?? '',
       faculty: map['faculty'] ?? '',

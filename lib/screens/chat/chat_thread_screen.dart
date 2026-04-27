@@ -6,18 +6,22 @@ import '../../models/chat.dart';
 import '../../models/chat_message.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'dart:ui' as ui;
 import '../../services/report_service.dart';
+import '../../providers/auth_provider.dart';
 
-class ChatThreadScreen extends StatefulWidget {
+class ChatThreadScreen extends ConsumerStatefulWidget {
   final ChatModel chat;
 
   const ChatThreadScreen({super.key, required this.chat});
 
   @override
-  State<ChatThreadScreen> createState() => _ChatThreadScreenState();
+  ConsumerState<ChatThreadScreen> createState() => _ChatThreadScreenState();
 }
 
-class _ChatThreadScreenState extends State<ChatThreadScreen> {
+class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
   final _chatService = ChatService();
   final _authService = AuthService();
   final _messageController = TextEditingController();
@@ -155,12 +159,16 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                   );
 
                   if (otherUid.isNotEmpty) {
+                    final userProfile = ref.read(userProfileProvider).value;
+                    final universityId = userProfile?['universityId'] ?? '';
+
                     await ReportService().submitReport(
                       reporterId: currentUser.uid,
                       targetId: otherUid,
                       targetType: 'user',
                       targetTitle: _otherStudentId,
                       reason: reason,
+                      universityId: universityId,
                       chatId: widget.chat.id,
                     );
                   }

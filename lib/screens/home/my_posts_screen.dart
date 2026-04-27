@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/book.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/service_providers.dart';
+import '../../providers/book_provider.dart';
 import '../../widgets/book_card.dart';
 
 class MyPostsScreen extends ConsumerWidget {
@@ -15,7 +16,7 @@ class MyPostsScreen extends ConsumerWidget {
 
     if (currentUser == null) return const Scaffold(body: Center(child: Text('يرجى تسجيل الدخول')));
 
-    final bookService = ref.read(bookServiceProvider);
+    final postsAsync = ref.watch(myBooksProvider);
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -26,19 +27,8 @@ class MyPostsScreen extends ConsumerWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        body: StreamBuilder<List<BookModel>>(
-          stream: bookService.getBooksByPublisher(currentUser.uid),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Center(child: Text('خطأ في تحميل البيانات: ${snapshot.error}'));
-            }
-
-            final posts = snapshot.data ?? [];
-
+        body: postsAsync.when(
+          data: (posts) {
             if (posts.isEmpty) {
               return Center(
                 child: Column(
@@ -67,6 +57,8 @@ class MyPostsScreen extends ConsumerWidget {
               },
             );
           },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('خطأ في تحميل البيانات: $err')),
         ),
       ),
     );

@@ -9,6 +9,7 @@ class ReportService {
     required String targetId,
     required String targetType, // 'book' or 'user'
     required String reason,
+    required String universityId,
     String? targetTitle, // Optional: e.g. book title
     String? chatId, // Optional: for chat reports to provide context for verification
   }) async {
@@ -20,6 +21,7 @@ class ReportService {
         'targetId': targetId,
         'targetType': targetType,
         'reason': reason,
+        'universityId': universityId,
         'targetTitle': targetTitle,
         'chatId': chatId,
         'timestamp': now,
@@ -63,5 +65,21 @@ class ReportService {
         .where('targetId', isEqualTo: targetId)
         .snapshots()
         .map((snapshot) => snapshot.docs.length);
+  }
+
+  /// Get reports filtered by university ID
+  Stream<List<Map<String, dynamic>>> getReportsByUniversity(String universityId) {
+    return _firestore
+        .collection('reports')
+        .where('universityId', isEqualTo: universityId)
+        .orderBy('timestamp', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return data;
+          }).toList();
+        });
   }
 }

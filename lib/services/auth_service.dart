@@ -65,6 +65,7 @@ class AuthService {
   Future<UserCredential> logIn({
     required String email,
     required String password,
+    String? universityId,
   }) async {
     try {
       final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
@@ -80,6 +81,7 @@ class AuthService {
           .set({
         'email': email,
         'studentID': studentId,
+        if (universityId != null) 'universityId': universityId,
       }, SetOptions(merge: true));
 
       return userCredential;
@@ -156,6 +158,22 @@ class AuthService {
         });
   }
 
+  /// Get blocked users by university
+  Stream<List<Map<String, dynamic>>> getBlockedUsersByUniversity(String universityId) {
+    return _firestore
+        .collection('Users')
+        .where('isBlocked', isEqualTo: true)
+        .where('universityId', isEqualTo: universityId)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) {
+            final data = doc.data();
+            data['uid'] = doc.id;
+            return data;
+          }).toList();
+        });
+  }
+
   /// Get user profile data (Stream)
   Stream<Map<String, dynamic>?> getUserProfile(String uid) {
     return _firestore
@@ -163,6 +181,16 @@ class AuthService {
         .doc(uid)
         .snapshots()
         .map((doc) => doc.data());
+  }
+
+  /// Fetch user profile from Firestore
+  Future<Map<String, dynamic>?> fetchUserProfile(String uid) async {
+    try {
+      final doc = await _firestore.collection('Users').doc(uid).get();
+      return doc.data();
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Log out

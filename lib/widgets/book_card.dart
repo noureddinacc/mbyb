@@ -168,6 +168,7 @@ class BookCard extends ConsumerWidget {
                                           targetType: 'book',
                                           targetTitle: book.title,
                                           reason: controller.text,
+                                          universityId: book.universityId,
                                         );
                                         if (context.mounted) {
                                           Navigator.pop(ctx);

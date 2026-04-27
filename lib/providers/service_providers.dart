@@ -32,8 +32,8 @@ final universityServiceProvider = Provider<UniversityService>((ref) {
   return UniversityService();
 });
 
-final universitiesProvider = FutureProvider<List<University>>((ref) async {
-  return ref.watch(universityServiceProvider).getUniversities();
+final universitiesProvider = StreamProvider<List<University>>((ref) {
+  return ref.watch(universityServiceProvider).getUniversitiesStream();
 });
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {

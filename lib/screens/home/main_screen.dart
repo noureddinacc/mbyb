@@ -20,6 +20,8 @@ import '../../providers/theme_provider.dart';
 import '../admin/admin_reports_screen.dart';
 import 'system_messages_screen.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/request_provider.dart';
+import '../../providers/system_message_provider.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -237,10 +239,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               : const Text('الرئيسية'),
           actions: [
             if (currentUser != null)
-              StreamBuilder<int>(
-                stream: ref.read(systemMessageServiceProvider).getUnreadCount(currentUser.uid),
-                builder: (context, snapshot) {
-                  final unreadCount = snapshot.data ?? 0;
+              Consumer(
+                builder: (context, ref, _) {
+                  final unreadCount = ref.watch(unreadSystemMessagesCountProvider).value ?? 0;
                   return IconButton(
                     icon: Badge(
                       isLabelVisible: unreadCount > 0,
@@ -352,10 +353,51 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
-                  radius: 30,
-                  backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
-                  child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                Consumer(
+                  builder: (context, ref, child) {
+                    final profileAsync = ref.watch(userProfileProvider);
+                    final unisAsync = ref.watch(universitiesProvider);
+
+                    return profileAsync.maybeWhen(
+                      data: (profile) {
+                        final universityId = profile?['universityId'];
+                        final university = unisAsync.maybeWhen(
+                          data: (unis) => unis.firstWhere((u) => u.id == universityId, orElse: () => unis.first), // Fallback to first if not found
+                          orElse: () => null,
+                        );
+
+                        if (university?.logoUrl != null && university!.logoUrl!.isNotEmpty) {
+                          return Container(
+                            width: 60,
+                            height: 60,
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                            ),
+                            child: ClipOval(
+                              child: Image.network(
+                                university.logoUrl!,
+                                fit: BoxFit.contain,
+                                errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                              ),
+                            ),
+                          );
+                        }
+                        
+                        return CircleAvatar(
+                          radius: 30,
+                          backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
+                          child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                        );
+                      },
+                      orElse: () => CircleAvatar(
+                        radius: 30,
+                        backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
+                        child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -523,7 +565,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             color: showBackground ? color.withValues(alpha: 0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: isSelected ? color : (isDark ? Colors.grey[400] : color), size: 20),
+          child: Icon(icon, color: color, size: 20),
         ),
         title: Text(
           label,
@@ -568,12 +610,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             BottomNavigationBarItem(
               icon: currentUser == null
                   ? const Icon(Icons.notifications_outlined)
-                  : StreamBuilder<List<RequestModel>>(
-                      stream: RequestService().getIncomingRequests(
-                        currentUser.uid,
-                      ),
-                      builder: (context, snapshot) {
-                        final count = snapshot.data?.length ?? 0;
+                  : Consumer(
+                      builder: (context, ref, _) {
+                        final count = ref.watch(incomingRequestsProvider).value?.length ?? 0;
                         return Badge(
                           isLabelVisible: count > 0,
                           label: Text(count.toString()),
@@ -588,16 +627,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             BottomNavigationBarItem(
               icon: currentUser == null
                   ? const Icon(Icons.chat_outlined)
-                  : StreamBuilder<List<ChatModel>>(
-                      stream: ChatService().getActiveChats(currentUser.uid),
-                      builder: (context, snapshot) {
-                        final unreadCount = snapshot.hasData 
-                            ? snapshot.data!.where((chat) {
-                                final lastSeen = chat.lastSeenAt[currentUser.uid];
-                                if (lastSeen == null) return true;
-                                return chat.updatedAt.isAfter(lastSeen);
-                              }).length
-                            : 0;
+                  : Consumer(
+                      builder: (context, ref, _) {
+                        final chats = ref.watch(userChatsProvider).value ?? [];
+                        final unreadCount = chats.where((chat) {
+                          final lastSeen = chat.lastSeenAt[currentUser.uid];
+                          if (lastSeen == null) return true;
+                          return chat.updatedAt.isAfter(lastSeen);
+                        }).length;
  
                         return Badge(
                           isLabelVisible: unreadCount > 0,

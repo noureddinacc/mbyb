@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/book.dart';
 import 'service_providers.dart';
+import 'auth_provider.dart';
 
 class FacultyFilterNotifier extends Notifier<String?> {
   @override
@@ -30,8 +31,26 @@ final postTypeFilterProvider = NotifierProvider<PostTypeFilterNotifier, String?>
 );
 
 final availableBooksProvider = StreamProvider<List<BookModel>>((ref) {
+  final authState = ref.watch(authStateProvider).value;
+  if (authState == null) return Stream.value([]);
+  
+  final userProfile = ref.watch(userProfileProvider).value;
+  final universityId = userProfile?['universityId'] as String?;
+  final isMasterAdmin = authState.email == 'solosoulacc@tutamail.com';
+  
   final bookService = ref.watch(bookServiceProvider);
-  return bookService.getAvailableBooks();
+
+  // Master admin sees everything, everyone else is strictly filtered by university
+  if (isMasterAdmin) {
+    return bookService.getAvailableBooks();
+  }
+
+  // If universityId hasn't loaded yet, return empty to avoid showing wrong data
+  if (universityId == null || universityId.isEmpty) {
+    return Stream.value([]);
+  }
+
+  return bookService.getAvailableBooksByUniversity(universityId);
 });
 
 final filteredBooksProvider = Provider<AsyncValue<List<BookModel>>>((ref) {
@@ -53,4 +72,17 @@ final filteredBooksProvider = Provider<AsyncValue<List<BookModel>>>((ref) {
       return matchesFaculty && matchesSearch && matchesPostType;
     }).toList();
   });
+});
+
+final universityBooksProvider = StreamProvider.family<List<BookModel>, String>((ref, universityId) {
+  final bookService = ref.watch(bookServiceProvider);
+  return bookService.getAvailableBooksByUniversity(universityId);
+});
+
+final myBooksProvider = StreamProvider<List<BookModel>>((ref) {
+  final authState = ref.watch(authStateProvider).value;
+  if (authState == null) return Stream.value([]);
+  
+  final bookService = ref.watch(bookServiceProvider);
+  return bookService.getBooksByPublisher(authState.uid);
 });

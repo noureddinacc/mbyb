@@ -7,14 +7,19 @@ import '../../models/request.dart';
 import '../../models/chat.dart';
 import '../../widgets/empty_state_view.dart';
 
-class RequestsScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/request_provider.dart';
+import '../../providers/auth_provider.dart';
+
+class RequestsScreen extends ConsumerStatefulWidget {
   const RequestsScreen({super.key});
 
   @override
-  State<RequestsScreen> createState() => _RequestsScreenState();
+  ConsumerState<RequestsScreen> createState() => _RequestsScreenState();
 }
 
-class _RequestsScreenState extends State<RequestsScreen> {
+class _RequestsScreenState extends ConsumerState<RequestsScreen> {
+
   final _requestService = RequestService();
   final _authService = AuthService();
 
@@ -34,7 +39,7 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = _authService.currentUser;
+    final currentUser = ref.watch(authStateProvider).value;
 
     if (currentUser == null) {
       return const Directionality(
@@ -58,19 +63,10 @@ class _RequestsScreenState extends State<RequestsScreen> {
 
   Widget _buildReceivedRequests(BuildContext context, User currentUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return StreamBuilder<List<RequestModel>>(
-      stream: _requestService.getIncomingRequests(currentUser.uid),
-      builder: (streamContext, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final requestsAsync = ref.watch(incomingRequestsProvider);
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-
-        final requests = snapshot.data ?? [];
-
+    return requestsAsync.when(
+      data: (requests) {
         if (requests.isEmpty) {
           return const EmptyStateView(
             icon: Icons.inbox_outlined,
@@ -251,24 +247,17 @@ class _RequestsScreenState extends State<RequestsScreen> {
           },
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
     );
   }
 
   Widget _buildSentRequests(BuildContext context, User currentUser) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return StreamBuilder<List<RequestModel>>(
-      stream: _requestService.getOutgoingRequests(currentUser.uid),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    final requestsAsync = ref.watch(outgoingRequestsProvider);
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-
-        final requests = snapshot.data ?? [];
-
+    return requestsAsync.when(
+      data: (requests) {
         if (requests.isEmpty) {
           return const EmptyStateView(
             icon: Icons.send_outlined,
@@ -365,6 +354,8 @@ class _RequestsScreenState extends State<RequestsScreen> {
           },
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
     );
   }
 }

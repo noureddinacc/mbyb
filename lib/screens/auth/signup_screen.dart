@@ -57,15 +57,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           universityId: _selectedUniversity!.id,
         );
         
-        setState(() {
-          _errorMessage = 'تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتسجيل الدخول.';
-        });
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'تم إنشاء الحساب بنجاح! يرجى التحقق من بريدك الإلكتروني لتسجيل الدخول.';
+          });
+        }
         await ref.read(authServiceProvider).logOut();
         return;
       } on FirebaseAuthException catch (e) {
-        setState(() { _errorMessage = e.message ?? 'حدث خطأ أثناء المصادقة'; });
+        if (mounted) {
+          setState(() { _errorMessage = e.message ?? 'حدث خطأ أثناء المصادقة'; });
+        }
       } catch (e) {
-        setState(() { _errorMessage = 'حدث خطأ غير متوقع'; });
+        if (mounted) {
+          setState(() { _errorMessage = 'حدث خطأ غير متوقع'; });
+        }
       } finally {
         if (mounted) setState(() { _isLoading = false; });
       }
@@ -93,7 +99,51 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   Center(
                     child: Column(
                       children: [
-                        Image.asset('assets/in/app-logo.png', height: 70),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset('assets/in/app-logo.png', height: 60),
+                            if (_selectedUniversity?.logoUrl != null) ...[
+                              const SizedBox(width: 16),
+                              Container(
+                                width: 2,
+                                height: 30,
+                                color: isDark ? Colors.grey[800] : Colors.grey[300],
+                              ),
+                              const SizedBox(width: 16),
+                              Container(
+                                width: 55,
+                                height: 55,
+                                padding: const EdgeInsets.all(6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.1),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                                child: ClipOval(
+                                  child: Image.network(
+                                    _selectedUniversity!.logoUrl!,
+                                    fit: BoxFit.contain,
+                                    loadingBuilder: (context, child, loadingProgress) {
+                                      if (loadingProgress == null) return child;
+                                      return const Center(child: CircularProgressIndicator(strokeWidth: 2));
+                                    },
+                                    errorBuilder: (context, error, stackTrace) => Icon(
+                                      Icons.school_rounded,
+                                      color: Colors.green[700],
+                                      size: 30,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                         const SizedBox(height: 24),
                         Text(
                           'إنشاء حساب جديد',
@@ -105,7 +155,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'انضم إلى مجتمع MBYB لتبادل الكتب مع زملائك',
+                          _selectedUniversity != null
+                            ? 'انضم إلى مجتمع ${_selectedUniversity!.name}'
+                            : 'انضم إلى مجتمع MBYB لتبادل الكتب مع زملائك',
                           style: TextStyle(
                             fontSize: 14, 
                             color: isDark ? Colors.grey[500] : Colors.grey[500]
@@ -220,11 +272,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       prefixIcon: Icon(Icons.alternate_email_rounded, size: 20, color: isDark ? Colors.grey[400] : Colors.grey[600]),
                     ),
                     keyboardType: TextInputType.emailAddress,
-                    validator: (value) => Validators.validateEmail(
-                      value, 
-                      requiredDomain: _selectedUniversity?.emailDomain,
-                      adminEmails: _selectedUniversity?.adminEmails,
-                    ),
+                    validator: (value) {
+                      final universities = universitiesAsync.value ?? [];
+                      final allAdmins = universities
+                          .expand((u) => u.adminEmails)
+                          .toList();
+                      
+                      return Validators.validateEmail(
+                        value,
+                        requiredDomain: _selectedUniversity?.emailDomain,
+                        adminEmails: _selectedUniversity?.adminEmails,
+                        allAdminEmails: allAdmins,
+                      );
+                    },
                   ),
                   // Smart Shortcut
                   if (_selectedUniversity != null)

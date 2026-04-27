@@ -19,13 +19,13 @@ class RulesScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
+                  color: (isDark ? Colors.teal : Theme.of(context).primaryColor).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.security_rounded,
                   size: 50,
-                  color: Theme.of(context).primaryColor,
+                  color: isDark ? Colors.teal[300] : Theme.of(context).primaryColor,
                 ),
               ),
               const SizedBox(height: 16),

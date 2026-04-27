@@ -7,6 +7,7 @@ class BookService {
   /// Upload a new book
   Future<String> uploadBook({
     required String publisherId,
+    required String universityId,
     required String title,
     required String author,
     required String faculty,
@@ -19,6 +20,7 @@ class BookService {
       final now = DateTime.now();
       final bookData = {
         'publisherId': publisherId,
+        'universityId': universityId,
         'title': title,
         'author': author,
         'faculty': faculty,
@@ -57,6 +59,21 @@ class BookService {
         .collection('books')
         .where('status', isEqualTo: 'Available')
         .where('faculty', isEqualTo: faculty)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => BookModel.fromMap(doc.data(), doc.id))
+              .toList();
+        });
+  }
+
+  /// Get available books filtered by university
+  Stream<List<BookModel>> getAvailableBooksByUniversity(String universityId) {
+    return _firestore
+        .collection('books')
+        .where('status', isEqualTo: 'Available')
+        .where('universityId', isEqualTo: universityId)
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {

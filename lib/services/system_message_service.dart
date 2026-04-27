@@ -82,15 +82,23 @@ class SystemMessageService {
         .map((snapshot) => snapshot.docs.length);
   }
 
-  /// Send a message to ALL users (Broadcast)
+  /// Send a message to users — scoped to a university, or all users for master admin
   Future<void> broadcastMessage({
     required String message,
+    String? universityId, // null = master admin, sends to all
   }) async {
     try {
       final now = DateTime.now();
-      
-      final usersSnapshot = await _firestore.collection('Users').get();
-      final adminEmail = 'solosoulacc@tutamail.com';
+      const masterAdminEmail = 'solosoulacc@tutamail.com';
+
+      Query<Map<String, dynamic>> query = _firestore.collection('Users');
+
+      // If a universityId is provided, restrict to that university's students only
+      if (universityId != null && universityId.isNotEmpty) {
+        query = query.where('universityId', isEqualTo: universityId);
+      }
+
+      final usersSnapshot = await query.get();
 
       var batch = _firestore.batch();
       int operationCount = 0;
@@ -98,14 +106,15 @@ class SystemMessageService {
       for (var userDoc in usersSnapshot.docs) {
         final userData = userDoc.data();
         final userEmail = userData['email'] as String?;
-        
-        if (userEmail == adminEmail) continue;
+
+        // Never send to the master admin account
+        if (userEmail == masterAdminEmail) continue;
 
         final msgRef = _firestore.collection('system_messages').doc();
         batch.set(msgRef, {
           'recipientId': userDoc.id,
           'message': message,
-          'senderName': 'الإدارة (تعميم)', 
+          'senderName': 'الإدارة (تعميم)',
           'timestamp': now,
           'isRead': false,
         });

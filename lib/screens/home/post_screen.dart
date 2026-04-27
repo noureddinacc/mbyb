@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../services/book_service.dart';
 import '../../services/auth_service.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/rounded_button.dart';
 import '../../utils/book_icons.dart';
 
@@ -22,14 +24,14 @@ const List<String> faculties = [
   'كلية التعليم الفني',
 ];
 
-class PostScreen extends StatefulWidget {
+class PostScreen extends ConsumerStatefulWidget {
   const PostScreen({super.key});
 
   @override
-  State<PostScreen> createState() => _PostScreenState();
+  ConsumerState<PostScreen> createState() => _PostScreenState();
 }
 
-class _PostScreenState extends State<PostScreen> {
+class _PostScreenState extends ConsumerState<PostScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
@@ -73,8 +75,12 @@ class _PostScreenState extends State<PostScreen> {
           throw Exception('المستخدم غير مصدق');
         }
 
+        final userProfile = ref.read(userProfileProvider).value;
+        final universityId = userProfile?['universityId'] ?? '';
+
         await _bookService.uploadBook(
           publisherId: userId,
+          universityId: universityId,
           title: _titleController.text.trim(),
           author: _authorController.text.trim(),
           faculty: _selectedFaculty!,

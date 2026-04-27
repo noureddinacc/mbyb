@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import '../../providers/auth_provider.dart';
 import '../../providers/service_providers.dart';
+import '../../providers/system_message_provider.dart';
 
 class SystemMessagesScreen extends ConsumerWidget {
   const SystemMessagesScreen({super.key});
@@ -14,6 +15,7 @@ class SystemMessagesScreen extends ConsumerWidget {
 
     if (currentUser == null) return const Scaffold(body: Center(child: Text('يرجى تسجيل الدخول')));
 
+    final messagesAsync = ref.watch(userSystemMessagesProvider);
     final messageService = ref.read(systemMessageServiceProvider);
 
     return Directionality(
@@ -25,27 +27,8 @@ class SystemMessagesScreen extends ConsumerWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
         ),
-        body: StreamBuilder<List<Map<String, dynamic>>>(
-          stream: messageService.getUserMessages(currentUser.uid),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    'خطأ في تحميل الرسائل: ${snapshot.error}',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                ),
-              );
-            }
-
-            final messages = snapshot.data ?? [];
+        body: messagesAsync.when(
+          data: (messages) {
             if (messages.isEmpty) {
               return Center(
                 child: Column(
@@ -182,6 +165,17 @@ class SystemMessagesScreen extends ConsumerWidget {
               },
             );
           },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Text(
+                'خطأ في تحميل الرسائل: $err',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
+          ),
         ),
       ),
     );
