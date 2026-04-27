@@ -28,4 +28,18 @@ class UniversityService {
           .toList();
     });
   }
+
+  /// Get university by email domain
+  Future<University?> getUniversityByDomain(String domain) async {
+    final snapshot = await _firestore
+        .collection('Universities')
+        .where('emailDomain', isEqualTo: domain)
+        .limit(1)
+        .get();
+    
+    if (snapshot.docs.isNotEmpty) {
+      return University.fromMap(snapshot.docs.first.id, snapshot.docs.first.data());
+    }
+    return null;
+  }
 }

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/service_providers.dart';
 import '../../screens/auth/login_screen.dart';
-import '../../screens/auth/signup_screen.dart';
 import '../../screens/home/main_screen.dart';
 import '../../screens/chat/chat_thread_screen.dart';
 import '../../screens/home/archived_chats_screen.dart';
@@ -54,8 +53,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         print('Router [$userEmail] verified=$isVerified admin=$isAdmin unis=${universities.length}');
       }
 
-      final isLoggingIn =
-          state.uri.path == '/login' || state.uri.path == '/signup';
+      final isLoggingIn = state.uri.path == '/login';
 
       if (!isAuth || (!isVerified && !isAdmin)) {
         return isLoggingIn ? null : '/login';
@@ -67,10 +65,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(
-        path: '/signup',
-        builder: (context, state) => const SignupScreen(),
-      ),
 
       GoRoute(path: '/home', builder: (context, state) => const MainScreen()),
       GoRoute(

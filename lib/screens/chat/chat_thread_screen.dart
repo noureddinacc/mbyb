@@ -7,8 +7,6 @@ import '../../models/chat_message.dart';
 import 'package:intl/intl.dart';
 import 'dart:ui' as ui;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import 'dart:ui' as ui;
 import '../../services/report_service.dart';
 import '../../providers/auth_provider.dart';
 
@@ -116,12 +114,20 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         textDirection: ui.TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-          title: Text('الإبلاغ عن $_otherStudentId', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+          title: Text(
+            'الإبلاغ عن $_otherStudentId',
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('يرجى وصف سبب الإبلاغ عن هذا المستخدم:', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
+              Text(
+                'يرجى وصف سبب الإبلاغ عن هذا المستخدم:',
+                style: TextStyle(
+                  color: isDark ? Colors.grey[300] : Colors.black87,
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: controller,
@@ -130,7 +136,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                 decoration: InputDecoration(
                   hintText: 'أدخل التقرير...',
                   filled: true,
-                  fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                  fillColor: isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.grey[100],
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -148,7 +156,7 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               onPressed: () async {
                 final reason = controller.text.trim();
                 if (reason.isEmpty) return;
-                
+
                 final currentUser = _authService.currentUser;
                 if (currentUser == null) return;
 
@@ -209,7 +217,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
         textDirection: ui.TextDirection.rtl,
         child: AlertDialog(
           backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-          title: Text('إغلاق المبادلة', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
+          title: Text(
+            'إغلاق المبادلة',
+            style: TextStyle(color: isDark ? Colors.white : Colors.black),
+          ),
           content: Text(
             'هل أنت متأكد؟ لن يتمكن أي طرف من إرسال رسائل بعد ذلك.',
             style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87),
@@ -357,9 +368,15 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                   ),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.green[900]!.withValues(alpha: 0.2) : Colors.green[50],
+                    color: isDark
+                        ? Colors.green[900]!.withValues(alpha: 0.2)
+                        : Colors.green[50],
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: isDark ? Colors.green[800]!.withValues(alpha: 0.3) : Colors.green[100]!),
+                    border: Border.all(
+                      color: isDark
+                          ? Colors.green[800]!.withValues(alpha: 0.3)
+                          : Colors.green[100]!,
+                    ),
                   ),
                   child: Row(
                     children: [
@@ -373,7 +390,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
                         child: Text(
                           'يرجى التحلي بالاحترام واتباع الإرشادات. يمكنك إغلاق المبادلة عند الإنتهاء من قائمة النقاط الثلاث أعلاه.',
                           style: TextStyle(
-                            color: isDark ? Colors.green[100] : Colors.green[900],
+                            color: isDark
+                                ? Colors.green[100]
+                                : Colors.green[900],
                             fontSize: 12,
                             height: 1.4,
                           ),
@@ -445,7 +464,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
     );
   }
 
-  Widget _buildMessageBubble(BuildContext context, ChatMessage message, bool isMe) {
+  Widget _buildMessageBubble(
+    BuildContext context,
+    ChatMessage message,
+    bool isMe,
+  ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
@@ -458,9 +481,11 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             margin: const EdgeInsets.symmetric(vertical: 4),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: isMe 
-                  ? (isDark ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32)) 
-                  : (isDark ? Colors.white.withValues(alpha: 0.1) : const Color(0xFFF1F1F1)),
+              color: isMe
+                  ? (isDark ? const Color(0xFF1B5E20) : const Color(0xFF2E7D32))
+                  : (isDark
+                        ? Colors.white.withValues(alpha: 0.1)
+                        : const Color(0xFFF1F1F1)),
               borderRadius: BorderRadius.only(
                 topLeft: const Radius.circular(16),
                 topRight: const Radius.circular(16),
@@ -471,7 +496,9 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             child: Text(
               message.text,
               style: TextStyle(
-                color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                color: isMe
+                    ? Colors.white
+                    : (isDark ? Colors.white : Colors.black87),
                 fontSize: 15,
               ),
             ),
@@ -480,7 +507,10 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Text(
               DateFormat('h:mm a').format(message.sentAt),
-              style: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 10),
+              style: TextStyle(
+                color: isDark ? Colors.grey[600] : Colors.grey[400],
+                fontSize: 10,
+              ),
             ),
           ),
         ],
@@ -494,7 +524,13 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF1F1F1))),
+        border: Border(
+          top: BorderSide(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : const Color(0xFFF1F1F1),
+          ),
+        ),
       ),
       child: Row(
         children: [
@@ -505,9 +541,14 @@ class _ChatThreadScreenState extends ConsumerState<ChatThreadScreen> {
               style: TextStyle(color: isDark ? Colors.white : Colors.black),
               decoration: InputDecoration(
                 hintText: 'اكتب رسالة...',
-                hintStyle: TextStyle(color: isDark ? Colors.grey[600] : Colors.grey[400], fontSize: 14),
+                hintStyle: TextStyle(
+                  color: isDark ? Colors.grey[600] : Colors.grey[400],
+                  fontSize: 14,
+                ),
                 filled: true,
-                fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFF8F8F8),
+                fillColor: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : const Color(0xFFF8F8F8),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 10,

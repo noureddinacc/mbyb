@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
-import '../../services/request_service.dart';
-import '../../services/chat_service.dart';
-import '../../models/request.dart';
-import '../../models/chat.dart';
+
 import 'home_screen.dart';
 import 'post_screen.dart';
 import 'requests_screen.dart';
@@ -93,7 +90,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   children: [
                     const Text(
                       'تصفية',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 20),
                     DropdownButtonFormField<String>(
@@ -108,12 +108,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         ...faculties.map((faculty) {
                           return DropdownMenuItem(
                             value: faculty,
-                            child: Text(faculty, overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              faculty,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           );
                         }),
                       ],
                       onChanged: (value) {
-                        ref.read(facultyFilterProvider.notifier).setFilter(value);
+                        ref
+                            .read(facultyFilterProvider.notifier)
+                            .setFilter(value);
                       },
                       decoration: InputDecoration(
                         labelText: 'الكلية',
@@ -133,10 +138,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           value: null,
                           child: Text('جميع الأنواع'),
                         ),
-                        DropdownMenuItem(
-                          value: 'free',
-                          child: Text('مجاني'),
-                        ),
+                        DropdownMenuItem(value: 'free', child: Text('مجاني')),
                         DropdownMenuItem(
                           value: 'exchange',
                           child: Text('للمبادلة'),
@@ -147,7 +149,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         ),
                       ],
                       onChanged: (value) {
-                        ref.read(postTypeFilterProvider.notifier).setFilter(value);
+                        ref
+                            .read(postTypeFilterProvider.notifier)
+                            .setFilter(value);
                       },
                       decoration: InputDecoration(
                         labelText: 'نوع المنشور',
@@ -195,12 +199,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       stream: ref.watch(authServiceProvider).isUserBlocked(currentUser.uid),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         if (snapshot.data == true) {
           return const BlockedScreen();
         }
-        
+
         return DefaultTabController(
           length: 2,
           child: _buildMainScaffold(currentUser),
@@ -211,7 +217,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   AppBar _buildAppBar(dynamic currentUser) {
     final selectedFaculty = ref.watch(facultyFilterProvider);
-    
+
     switch (_selectedIndex) {
       case 0: // Home
         return AppBar(
@@ -219,7 +225,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               ? Container(
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.light ? Colors.grey[100] : Colors.grey[900],
+                    color: Theme.of(context).brightness == Brightness.light
+                        ? Colors.grey[100]
+                        : Colors.grey[900],
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: TextField(
@@ -228,11 +236,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     onChanged: (val) {
                       ref.read(searchQueryProvider.notifier).setQuery(val);
                     },
-                    style: TextStyle(color: Theme.of(context).brightness == Brightness.light ? Colors.black : Colors.white, fontSize: 14),
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? Colors.black
+                          : Colors.white,
+                      fontSize: 14,
+                    ),
                     decoration: const InputDecoration(
                       hintText: 'بحث...',
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
                 )
@@ -241,7 +257,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             if (currentUser != null)
               Consumer(
                 builder: (context, ref, _) {
-                  final unreadCount = ref.watch(unreadSystemMessagesCountProvider).value ?? 0;
+                  final unreadCount =
+                      ref.watch(unreadSystemMessagesCountProvider).value ?? 0;
                   return IconButton(
                     icon: Badge(
                       isLabelVisible: unreadCount > 0,
@@ -251,7 +268,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SystemMessagesScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const SystemMessagesScreen(),
+                        ),
                       );
                     },
                   );
@@ -273,11 +292,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             ),
             IconButton(
               icon: Icon(
-                (selectedFaculty == null && ref.watch(postTypeFilterProvider) == null) 
-                    ? Icons.filter_alt_outlined 
+                (selectedFaculty == null &&
+                        ref.watch(postTypeFilterProvider) == null)
+                    ? Icons.filter_alt_outlined
                     : Icons.filter_alt,
-                color: (selectedFaculty == null && ref.watch(postTypeFilterProvider) == null) 
-                    ? null 
+                color:
+                    (selectedFaculty == null &&
+                        ref.watch(postTypeFilterProvider) == null)
+                    ? null
                     : Colors.green,
               ),
               onPressed: _showFilterBottomSheeet,
@@ -294,8 +316,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             unselectedLabelColor: Colors.grey,
             indicatorColor: Theme.of(context).colorScheme.primary,
             indicatorWeight: 3,
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 15),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.normal,
+              fontSize: 15,
+            ),
             tabs: const [
               Tab(text: 'المستلمة'),
               Tab(text: 'المرسلة'),
@@ -349,7 +377,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           Container(
             padding: const EdgeInsets.fromLTRB(20, 60, 20, 30),
             decoration: BoxDecoration(
-              color: isDark ? Colors.teal.withValues(alpha: 0.1) : Colors.green[50]?.withValues(alpha: 0.5),
+              color: isDark
+                  ? Colors.teal.withValues(alpha: 0.1)
+                  : Colors.green[50]?.withValues(alpha: 0.5),
             ),
             child: Row(
               children: [
@@ -362,11 +392,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       data: (profile) {
                         final universityId = profile?['universityId'];
                         final university = unisAsync.maybeWhen(
-                          data: (unis) => unis.firstWhere((u) => u.id == universityId, orElse: () => unis.first), // Fallback to first if not found
+                          data: (unis) => unis.firstWhere(
+                            (u) => u.id == universityId,
+                            orElse: () => unis.first,
+                          ), // Fallback to first if not found
                           orElse: () => null,
                         );
 
-                        if (university?.logoUrl != null && university!.logoUrl!.isNotEmpty) {
+                        if (university?.logoUrl != null &&
+                            university!.logoUrl!.isNotEmpty) {
                           return Container(
                             width: 60,
                             height: 60,
@@ -379,22 +413,43 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                               child: Image.network(
                                 university.logoUrl!,
                                 fit: BoxFit.contain,
-                                errorBuilder: (context, error, stackTrace) => Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(
+                                      Icons.person,
+                                      color: isDark
+                                          ? Colors.teal[200]
+                                          : Colors.green[700],
+                                      size: 30,
+                                    ),
                               ),
                             ),
                           );
                         }
-                        
+
                         return CircleAvatar(
                           radius: 30,
-                          backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
-                          child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                          backgroundColor: isDark
+                              ? Colors.teal[900]
+                              : Colors.green[100],
+                          child: Icon(
+                            Icons.person,
+                            color: isDark
+                                ? Colors.teal[200]
+                                : Colors.green[700],
+                            size: 30,
+                          ),
                         );
                       },
                       orElse: () => CircleAvatar(
                         radius: 30,
-                        backgroundColor: isDark ? Colors.teal[900] : Colors.green[100],
-                        child: Icon(Icons.person, color: isDark ? Colors.teal[200] : Colors.green[700], size: 30),
+                        backgroundColor: isDark
+                            ? Colors.teal[900]
+                            : Colors.green[100],
+                        child: Icon(
+                          Icons.person,
+                          color: isDark ? Colors.teal[200] : Colors.green[700],
+                          size: 30,
+                        ),
                       ),
                     );
                   },
@@ -406,7 +461,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     children: [
                       Text(
                         'مرحباً بك',
-                        style: TextStyle(color: isDark ? Colors.grey[400] : Colors.grey, fontSize: 12),
+                        style: TextStyle(
+                          color: isDark ? Colors.grey[400] : Colors.grey,
+                          fontSize: 12,
+                        ),
                       ),
                       Directionality(
                         textDirection: TextDirection.ltr,
@@ -468,15 +526,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AdminReportsScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const AdminReportsScreen(),
+                  ),
                 );
               },
             ),
-          
+
           const Spacer(),
 
           // Dark Mode Toggle - Option 1: Bottom of Drawer
-          Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
+          Divider(
+            color: isDark ? Colors.grey[800] : Colors.grey[100],
+            height: 1,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: ListTile(
@@ -502,7 +565,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
 
           // Logout Section
-          Divider(color: isDark ? Colors.grey[800] : Colors.grey[100], height: 1),
+          Divider(
+            color: isDark ? Colors.grey[800] : Colors.grey[100],
+            height: 1,
+          ),
           _buildDrawerItem(
             icon: Icons.logout_rounded,
             label: 'تسجيل الخروج',
@@ -515,7 +581,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   textDirection: TextDirection.rtl,
                   child: AlertDialog(
                     title: const Text('تسجيل الخروج'),
-                    content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
+                    content: const Text(
+                      'هل أنت متأكد من رغبتك في تسجيل الخروج؟',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, false),
@@ -523,13 +591,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       ),
                       TextButton(
                         onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('خروج', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'خروج',
+                          style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               );
-              
+
               if (confirm == true) {
                 await ref.read(authServiceProvider).logOut();
                 if (context.mounted) context.go('/login');
@@ -539,7 +613,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           const SizedBox(height: 10),
           Text(
             'MBYB v2.0.0', // Updated version to celebrate UI 2.0
-            style: TextStyle(color: isDark ? Colors.grey[700] : Colors.grey[300], fontSize: 10),
+            style: TextStyle(
+              color: isDark ? Colors.grey[700] : Colors.grey[300],
+              fontSize: 10,
+            ),
           ),
           const SizedBox(height: 20),
         ],
@@ -562,7 +639,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: showBackground ? color.withValues(alpha: 0.1) : Colors.transparent,
+            color: showBackground
+                ? color.withValues(alpha: 0.1)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: color, size: 20),
@@ -572,7 +651,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           style: TextStyle(
             fontSize: 15,
             fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            color: isSelected ? color : (isDark ? Colors.white : Colors.black87),
+            color: isSelected
+                ? color
+                : (isDark ? Colors.white : Colors.black87),
           ),
         ),
         selected: isSelected,
@@ -587,11 +668,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: _buildAppBar(currentUser),
-        drawer: _buildDrawer(currentUser), // Enabled drawer for all screens for easy theme access
-        body: IndexedStack(
-          index: _selectedIndex,
-          children: _screens,
-        ),
+        drawer: _buildDrawer(
+          currentUser,
+        ), // Enabled drawer for all screens for easy theme access
+        body: IndexedStack(index: _selectedIndex, children: _screens),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: _onNavBarItemTapped,
@@ -612,7 +692,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   ? const Icon(Icons.notifications_outlined)
                   : Consumer(
                       builder: (context, ref, _) {
-                        final count = ref.watch(incomingRequestsProvider).value?.length ?? 0;
+                        final count =
+                            ref.watch(incomingRequestsProvider).value?.length ??
+                            0;
                         return Badge(
                           isLabelVisible: count > 0,
                           label: Text(count.toString()),
@@ -635,7 +717,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           if (lastSeen == null) return true;
                           return chat.updatedAt.isAfter(lastSeen);
                         }).length;
- 
+
                         return Badge(
                           isLabelVisible: unreadCount > 0,
                           label: Text(unreadCount.toString()),

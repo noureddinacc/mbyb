@@ -32,6 +32,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/in/app-logo.png
+    - assets/microsoft-logo.png
 
 
 flutter_icons:

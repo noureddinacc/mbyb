@@ -3,8 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 import '../../services/report_service.dart';
 import '../../services/book_service.dart';
-import '../../services/auth_service.dart';
-import '../../models/book.dart';
+
 import '../../models/chat_message.dart';
 import '../../providers/service_providers.dart';
 import '../../providers/auth_provider.dart';
@@ -28,7 +27,9 @@ class AdminReportsScreen extends ConsumerWidget {
         textDirection: TextDirection.rtl,
         child: Dialog(
           backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Container(
             constraints: const BoxConstraints(maxHeight: 600, maxWidth: 400),
             padding: const EdgeInsets.all(24),
@@ -40,10 +41,16 @@ class AdminReportsScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: isDark ? Colors.green[900]!.withValues(alpha: 0.3) : Colors.green[50],
+                        color: isDark
+                            ? Colors.green[900]!.withValues(alpha: 0.3)
+                            : Colors.green[50],
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Icon(Icons.forum_rounded, color: isDark ? Colors.green[300] : Colors.green[700], size: 20),
+                      child: Icon(
+                        Icons.forum_rounded,
+                        color: isDark ? Colors.green[300] : Colors.green[700],
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Text(
@@ -72,7 +79,12 @@ class AdminReportsScreen extends ConsumerWidget {
 
                       final messages = snapshot.data ?? [];
                       if (messages.isEmpty) {
-                        return const Center(child: Text('لا توجد رسائل في هذه المحادثة.', style: TextStyle(color: Colors.grey)));
+                        return const Center(
+                          child: Text(
+                            'لا توجد رسائل في هذه المحادثة.',
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        );
                       }
 
                       return ListView.builder(
@@ -84,50 +96,79 @@ class AdminReportsScreen extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6.0),
                             child: Column(
-                              crossAxisAlignment: isAlternativeSender ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                              crossAxisAlignment: isAlternativeSender
+                                  ? CrossAxisAlignment.start
+                                  : CrossAxisAlignment.end,
                               children: [
                                 FutureBuilder<String?>(
-                                  future: authService.getStudentIdFromUid(msg.senderId),
+                                  future: authService.getStudentIdFromUid(
+                                    msg.senderId,
+                                  ),
                                   builder: (context, userSnapshot) {
                                     return Text(
                                       userSnapshot.data ?? 'مستخدم',
                                       style: TextStyle(
                                         fontSize: 10,
                                         fontWeight: FontWeight.bold,
-                                        color: isDark ? Colors.grey[500] : Colors.grey[400],
+                                        color: isDark
+                                            ? Colors.grey[500]
+                                            : Colors.grey[400],
                                       ),
                                     );
                                   },
                                 ),
                                 const SizedBox(height: 4),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: isAlternativeSender
-                                        ? (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[100])
-                                        : (isDark ? Colors.teal[700] : Colors.green[700]),
-                                    borderRadius: BorderRadius.circular(16).copyWith(
-                                      bottomRight: isAlternativeSender ? const Radius.circular(16) : Radius.zero,
-                                      bottomLeft: isAlternativeSender ? Radius.zero : const Radius.circular(16),
-                                    ),
+                                        ? (isDark
+                                              ? Colors.white.withValues(
+                                                  alpha: 0.1,
+                                                )
+                                              : Colors.grey[100])
+                                        : (isDark
+                                              ? Colors.teal[700]
+                                              : Colors.green[700]),
+                                    borderRadius: BorderRadius.circular(16)
+                                        .copyWith(
+                                          bottomRight: isAlternativeSender
+                                              ? const Radius.circular(16)
+                                              : Radius.zero,
+                                          bottomLeft: isAlternativeSender
+                                              ? Radius.zero
+                                              : const Radius.circular(16),
+                                        ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         msg.text,
                                         style: TextStyle(
-                                          color: isAlternativeSender ? (isDark ? Colors.white : Colors.black87) : Colors.white,
+                                          color: isAlternativeSender
+                                              ? (isDark
+                                                    ? Colors.white
+                                                    : Colors.black87)
+                                              : Colors.white,
                                           fontSize: 14,
                                           height: 1.4,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        DateFormat('hh:mm a').format(msg.sentAt),
+                                        DateFormat(
+                                          'hh:mm a',
+                                        ).format(msg.sentAt),
                                         style: TextStyle(
                                           fontSize: 9,
-                                          color: isAlternativeSender ? Colors.grey[500] : Colors.green[100],
+                                          color: isAlternativeSender
+                                              ? Colors.grey[500]
+                                              : Colors.green[100],
                                         ),
                                       ),
                                     ],
@@ -144,7 +185,11 @@ class AdminReportsScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 const Text(
                   '* هذا السجل للمراجعة فقط *',
-                  style: TextStyle(fontSize: 10, color: Colors.grey, fontStyle: FontStyle.italic),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
             ),
@@ -169,7 +214,9 @@ class AdminReportsScreen extends ConsumerWidget {
         textDirection: TextDirection.rtl,
         child: Dialog(
           backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -178,18 +225,26 @@ class AdminReportsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'إرسال إلى $studentId',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: TextField(
                     controller: controller,
                     maxLines: 3,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                     decoration: const InputDecoration(
                       hintText: 'اكتب رسالتك هنا...',
                       border: InputBorder.none,
@@ -203,7 +258,10 @@ class AdminReportsScreen extends ConsumerWidget {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.pop(ctx),
-                      child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
+                      child: const Text(
+                        'إلغاء',
+                        style: TextStyle(color: Colors.grey),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     ElevatedButton(
@@ -211,29 +269,40 @@ class AdminReportsScreen extends ConsumerWidget {
                         final message = controller.text.trim();
                         if (message.isEmpty) return;
                         try {
-                          await ref.read(systemMessageServiceProvider).sendAdminMessage(
-                            recipientId: recipientId,
-                            message: message,
-                          );
+                          await ref
+                              .read(systemMessageServiceProvider)
+                              .sendAdminMessage(
+                                recipientId: recipientId,
+                                message: message,
+                              );
                           if (context.mounted) {
                             Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('تم إرسال الرسالة بنجاح.')),
+                              const SnackBar(
+                                content: Text('تم إرسال الرسالة بنجاح.'),
+                              ),
                             );
                           }
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('فشل: $e'), backgroundColor: Colors.red),
+                              SnackBar(
+                                content: Text('فشل: $e'),
+                                backgroundColor: Colors.red,
+                              ),
                             );
                           }
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? Colors.teal[700] : Colors.green,
+                        backgroundColor: isDark
+                            ? Colors.teal[700]
+                            : Colors.green,
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('إرسال الآن'),
                     ),
@@ -251,8 +320,10 @@ class AdminReportsScreen extends ConsumerWidget {
     final controller = TextEditingController();
     final isDark = Theme.of(context).brightness == Brightness.dark;
     // Read the admin's university scope at dialog open time
-    final adminUniversityId = ref.read(userProfileProvider).value?['universityId'] as String?;
-    final isMasterAdmin = ref.read(authStateProvider).value?.email == 'solosoulacc@tutamail.com';
+    final adminUniversityId =
+        ref.read(userProfileProvider).value?['universityId'] as String?;
+    final isMasterAdmin =
+        ref.read(authStateProvider).value?.email == 'solosoulacc@tutamail.com';
 
     showDialog(
       context: context,
@@ -260,7 +331,9 @@ class AdminReportsScreen extends ConsumerWidget {
         textDirection: TextDirection.rtl,
         child: Dialog(
           backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -268,26 +341,36 @@ class AdminReportsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isMasterAdmin ? 'بث تعميم لجميع الطلاب' : 'بث تعميم لطلاب جامعتك',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDark ? Colors.white : Colors.black),
+                  isMasterAdmin
+                      ? 'بث تعميم لجميع الطلاب'
+                      : 'بث تعميم لطلاب جامعتك',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: isDark ? Colors.white : Colors.black,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  isMasterAdmin 
-                    ? 'سيتم إرسال هذه الرسالة إلى جميع المسجلين في التطبيق.'
-                    : 'سيتم إرسال هذه الرسالة إلى جميع طلاب جامعتك فقط.',
+                  isMasterAdmin
+                      ? 'سيتم إرسال هذه الرسالة إلى جميع المسجلين في التطبيق.'
+                      : 'سيتم إرسال هذه الرسالة إلى جميع طلاب جامعتك فقط.',
                   style: const TextStyle(fontSize: 13, color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                    color: isDark
+                        ? Colors.white.withValues(alpha: 0.05)
+                        : Colors.grey[100],
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: TextField(
                     controller: controller,
                     maxLines: 4,
-                    style: TextStyle(color: isDark ? Colors.white : Colors.black),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
                     decoration: const InputDecoration(
                       hintText: 'اكتب التعميم هنا...',
                       border: InputBorder.none,
@@ -313,12 +396,22 @@ class AdminReportsScreen extends ConsumerWidget {
                           context: ctx,
                           builder: (confirmCtx) => AlertDialog(
                             title: const Text('تأكيد الإرسال'),
-                            content: Text(isMasterAdmin 
-                              ? 'هل أنت متأكد من إرسال هذا التعميم لجميع مستخدمي التطبيق؟'
-                              : 'هل أنت متأكد من إرسال هذا التعميم لجميع طلاب جامعتك؟'),
+                            content: Text(
+                              isMasterAdmin
+                                  ? 'هل أنت متأكد من إرسال هذا التعميم لجميع مستخدمي التطبيق؟'
+                                  : 'هل أنت متأكد من إرسال هذا التعميم لجميع طلاب جامعتك؟',
+                            ),
                             actions: [
-                              TextButton(onPressed: () => Navigator.pop(confirmCtx, false), child: const Text('تراجع')),
-                              TextButton(onPressed: () => Navigator.pop(confirmCtx, true), child: const Text('نعم، أرسل')),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(confirmCtx, false),
+                                child: const Text('تراجع'),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    Navigator.pop(confirmCtx, true),
+                                child: const Text('نعم، أرسل'),
+                              ),
                             ],
                           ),
                         );
@@ -326,30 +419,53 @@ class AdminReportsScreen extends ConsumerWidget {
                         if (confirm != true) return;
 
                         if (context.mounted) {
-                          showDialog(context: context, barrierDismissible: false, builder: (_) => const Center(child: CircularProgressIndicator()));
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (_) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
                           try {
-                            await ref.read(systemMessageServiceProvider).broadcastMessage(
-                              message: message,
-                              universityId: isMasterAdmin ? null : adminUniversityId,
-                            );
+                            await ref
+                                .read(systemMessageServiceProvider)
+                                .broadcastMessage(
+                                  message: message,
+                                  universityId: isMasterAdmin
+                                      ? null
+                                      : adminUniversityId,
+                                );
                             if (context.mounted) {
                               Navigator.pop(context);
                               Navigator.pop(ctx);
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إرسال التعميم بنجاح.')));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('تم إرسال التعميم بنجاح.'),
+                                ),
+                              );
                             }
                           } catch (e) {
                             if (context.mounted) {
                               Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('فشل: $e'), backgroundColor: Colors.red));
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('فشل: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
                             }
                           }
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isDark ? Colors.blue[900] : Colors.blue[800],
+                        backgroundColor: isDark
+                            ? Colors.blue[900]
+                            : Colors.blue[800],
                         foregroundColor: Colors.white,
                         elevation: 0,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: const Text('بث للجميع'),
                     ),
@@ -374,13 +490,20 @@ class AdminReportsScreen extends ConsumerWidget {
       child: ElevatedButton.icon(
         onPressed: onTap,
         icon: Icon(icon, size: 16),
-        label: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+        label: Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isDark ? color.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+          backgroundColor: isDark
+              ? color.withValues(alpha: 0.2)
+              : color.withValues(alpha: 0.1),
           foregroundColor: isDark ? color.withValues(alpha: 0.8) : color,
           elevation: 0,
           padding: const EdgeInsets.symmetric(vertical: 8),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       ),
     );
@@ -409,11 +532,17 @@ class AdminReportsScreen extends ConsumerWidget {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('إدارة التقارير', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            'إدارة التقارير',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           actions: [
             IconButton(
               icon: const Icon(Icons.person_off_rounded, size: 22),
-              onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedUsersScreen())),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const BlockedUsersScreen()),
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.campaign_outlined, size: 24),
@@ -435,7 +564,10 @@ class AdminReportsScreen extends ConsumerWidget {
             final reports = snapshot.data ?? [];
             if (reports.isEmpty) {
               return const Center(
-                child: Text('لا توجد تقارير حالياً.', style: TextStyle(color: Colors.grey)),
+                child: Text(
+                  'لا توجد تقارير حالياً.',
+                  style: TextStyle(color: Colors.grey),
+                ),
               );
             }
 
@@ -445,16 +577,24 @@ class AdminReportsScreen extends ConsumerWidget {
               separatorBuilder: (context, index) => Divider(
                 height: 1,
                 thickness: 1,
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.grey[100],
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.grey[100],
                 indent: 16,
               ),
               itemBuilder: (context, index) {
                 final report = reports[index];
-                final DateTime timestamp = (report['timestamp'] as dynamic).toDate();
-                final dateStr = DateFormat('yyyy/MM/dd hh:mm a').format(timestamp);
+                final DateTime timestamp = (report['timestamp'] as dynamic)
+                    .toDate();
+                final dateStr = DateFormat(
+                  'yyyy/MM/dd hh:mm a',
+                ).format(timestamp);
 
                 return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -464,10 +604,13 @@ class AdminReportsScreen extends ConsumerWidget {
                         children: [
                           FutureBuilder<String?>(
                             future: report['targetType'] == 'user'
-                                ? authService.getStudentIdFromUid(report['targetId'])
+                                ? authService.getStudentIdFromUid(
+                                    report['targetId'],
+                                  )
                                 : Future.value(report['targetTitle']),
                             builder: (context, targetSnapshot) {
-                              final title = targetSnapshot.data ?? 'هدف غير معروف';
+                              final title =
+                                  targetSnapshot.data ?? 'هدف غير معروف';
                               return Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,19 +618,40 @@ class AdminReportsScreen extends ConsumerWidget {
                                     Row(
                                       children: [
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 2,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: report['targetType'] == 'user'
-                                                ? (isDark ? Colors.orange[900]!.withValues(alpha: 0.3) : Colors.orange[50])
-                                                : (isDark ? Colors.blue[900]!.withValues(alpha: 0.3) : Colors.blue[50]),
-                                            borderRadius: BorderRadius.circular(6),
+                                            color:
+                                                report['targetType'] == 'user'
+                                                ? (isDark
+                                                      ? Colors.orange[900]!
+                                                            .withValues(
+                                                              alpha: 0.3,
+                                                            )
+                                                      : Colors.orange[50])
+                                                : (isDark
+                                                      ? Colors.blue[900]!
+                                                            .withValues(
+                                                              alpha: 0.3,
+                                                            )
+                                                      : Colors.blue[50]),
+                                            borderRadius: BorderRadius.circular(
+                                              6,
+                                            ),
                                           ),
                                           child: Text(
-                                            report['targetType'] == 'user' ? 'مستخدم' : 'كتاب',
+                                            report['targetType'] == 'user'
+                                                ? 'مستخدم'
+                                                : 'كتاب',
                                             style: TextStyle(
                                               fontSize: 10,
                                               fontWeight: FontWeight.bold,
-                                              color: report['targetType'] == 'user' ? Colors.orange[300] : Colors.blue[300],
+                                              color:
+                                                  report['targetType'] == 'user'
+                                                  ? Colors.orange[300]
+                                                  : Colors.blue[300],
                                             ),
                                           ),
                                         ),
@@ -498,7 +662,9 @@ class AdminReportsScreen extends ConsumerWidget {
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 16,
-                                              color: isDark ? Colors.white : Colors.black,
+                                              color: isDark
+                                                  ? Colors.white
+                                                  : Colors.black,
                                             ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -506,7 +672,15 @@ class AdminReportsScreen extends ConsumerWidget {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text(dateStr, style: TextStyle(fontSize: 11, color: isDark ? Colors.grey[600] : Colors.grey[400])),
+                                    Text(
+                                      dateStr,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: isDark
+                                            ? Colors.grey[600]
+                                            : Colors.grey[400],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );
@@ -514,18 +688,31 @@ class AdminReportsScreen extends ConsumerWidget {
                           ),
                           // Report Count Badge
                           StreamBuilder<int>(
-                            stream: reportService.getReportCount(report['targetId']),
+                            stream: reportService.getReportCount(
+                              report['targetId'],
+                            ),
                             builder: (context, countSnapshot) {
                               final count = countSnapshot.data ?? 0;
                               return Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: isDark ? Colors.red[900]!.withValues(alpha: 0.3) : Colors.red[50],
+                                  color: isDark
+                                      ? Colors.red[900]!.withValues(alpha: 0.3)
+                                      : Colors.red[50],
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
                                   '$count تقارير',
-                                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: isDark ? Colors.red[300] : Colors.red[700]),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.red[300]
+                                        : Colors.red[700],
+                                  ),
                                 ),
                               );
                             },
@@ -535,15 +722,28 @@ class AdminReportsScreen extends ConsumerWidget {
                       const SizedBox(height: 16),
                       // Reporter Info
                       FutureBuilder<String?>(
-                        future: authService.getStudentIdFromUid(report['reporterId']),
+                        future: authService.getStudentIdFromUid(
+                          report['reporterId'],
+                        ),
                         builder: (context, reporterSnapshot) {
                           return Row(
                             children: [
-                              Icon(Icons.flag_outlined, size: 14, color: isDark ? Colors.grey[600] : Colors.grey[400]),
+                              Icon(
+                                Icons.flag_outlined,
+                                size: 14,
+                                color: isDark
+                                    ? Colors.grey[600]
+                                    : Colors.grey[400],
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 'بواسطة: ${reporterSnapshot.data ?? 'مجهول'}',
-                                style: TextStyle(fontSize: 12, color: isDark ? Colors.grey[500] : Colors.grey[600]),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDark
+                                      ? Colors.grey[500]
+                                      : Colors.grey[600],
+                                ),
                               ),
                             ],
                           );
@@ -555,12 +755,18 @@ class AdminReportsScreen extends ConsumerWidget {
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.grey[50],
+                          color: isDark
+                              ? Colors.white.withValues(alpha: 0.03)
+                              : Colors.grey[50],
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           report['reason'] ?? 'لا يوجد وصف.',
-                          style: TextStyle(fontSize: 14, height: 1.5, color: isDark ? Colors.grey[300] : Colors.black87),
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: isDark ? Colors.grey[300] : Colors.black87,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -571,13 +777,25 @@ class AdminReportsScreen extends ConsumerWidget {
                           child: SizedBox(
                             width: double.infinity,
                             child: OutlinedButton.icon(
-                              onPressed: () => _showChatHistoryDialog(context, ref, report['chatId']),
+                              onPressed: () => _showChatHistoryDialog(
+                                context,
+                                ref,
+                                report['chatId'],
+                              ),
                               icon: const Icon(Icons.forum_outlined, size: 18),
                               label: const Text('عرض المحادثة المتعلقة'),
                               style: OutlinedButton.styleFrom(
-                                foregroundColor: isDark ? Colors.blue[300] : Colors.blue[700],
-                                side: BorderSide(color: isDark ? Colors.blue[900]! : Colors.blue[100]!),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                foregroundColor: isDark
+                                    ? Colors.blue[300]
+                                    : Colors.blue[700],
+                                side: BorderSide(
+                                  color: isDark
+                                      ? Colors.blue[900]!
+                                      : Colors.blue[100]!,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
                             ),
                           ),
@@ -585,11 +803,18 @@ class AdminReportsScreen extends ConsumerWidget {
                       // Action Pills
                       FutureBuilder<String?>(
                         future: report['targetType'] == 'user'
-                            ? authService.getStudentIdFromUid(report['targetId'])
-                            : bookService.getBookById(report['targetId']).then((b) => b?.publisherId),
+                            ? authService.getStudentIdFromUid(
+                                report['targetId'],
+                              )
+                            : bookService
+                                  .getBookById(report['targetId'])
+                                  .then((b) => b?.publisherId),
                         builder: (context, targetUserSnapshot) {
-                          final targetUserId = report['targetType'] == 'user' ? report['targetId'] : targetUserSnapshot.data;
-                          if (targetUserId == null) return const SizedBox.shrink();
+                          final targetUserId = report['targetType'] == 'user'
+                              ? report['targetId']
+                              : targetUserSnapshot.data;
+                          if (targetUserId == null)
+                            return const SizedBox.shrink();
 
                           return Row(
                             children: [
@@ -599,8 +824,15 @@ class AdminReportsScreen extends ConsumerWidget {
                                 color: Colors.blue,
                                 isDark: isDark,
                                 onTap: () async {
-                                  final studentId = await authService.getStudentIdFromUid(targetUserId);
-                                  if (context.mounted) _showSendMessageDialog(context, ref, targetUserId, studentId ?? 'مستخدم');
+                                  final studentId = await authService
+                                      .getStudentIdFromUid(targetUserId);
+                                  if (context.mounted)
+                                    _showSendMessageDialog(
+                                      context,
+                                      ref,
+                                      targetUserId,
+                                      studentId ?? 'مستخدم',
+                                    );
                                 },
                               ),
                               const SizedBox(width: 12),
@@ -610,24 +842,66 @@ class AdminReportsScreen extends ConsumerWidget {
                                 color: Colors.red,
                                 isDark: isDark,
                                 onTap: () async {
-                                  final studentId = await authService.getStudentIdFromUid(targetUserId);
+                                  final studentId = await authService
+                                      .getStudentIdFromUid(targetUserId);
                                   final confirm = await showDialog<bool>(
                                     context: context,
                                     builder: (dialogCtx) => AlertDialog(
-                                      backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-                                      title: Text('حظر نهائي', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
-                                      content: Text('هل أنت متأكد من حظر $studentId؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
+                                      backgroundColor: isDark
+                                          ? const Color(0xFF1A1D1E)
+                                          : Colors.white,
+                                      title: Text(
+                                        'حظر نهائي',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black,
+                                        ),
+                                      ),
+                                      content: Text(
+                                        'هل أنت متأكد من حظر $studentId؟',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.grey[300]
+                                              : Colors.black87,
+                                        ),
+                                      ),
                                       actions: [
-                                        TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('إلغاء')),
-                                        TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('حظر', style: TextStyle(color: Colors.red))),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(dialogCtx, false),
+                                          child: const Text('إلغاء'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(dialogCtx, true),
+                                          child: const Text(
+                                            'حظر',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   );
                                   if (confirm == true) {
                                     await authService.blockUser(targetUserId);
-                                    await bookService.hideBooksByUserId(targetUserId);
-                                    await ref.read(chatServiceProvider).closeAllUserChats(targetUserId, 'Admin (Ban)');
-                                    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم الحظر.')));
+                                    await bookService.hideBooksByUserId(
+                                      targetUserId,
+                                    );
+                                    await ref
+                                        .read(chatServiceProvider)
+                                        .closeAllUserChats(
+                                          targetUserId,
+                                          'Admin (Ban)',
+                                        );
+                                    if (context.mounted)
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('تم الحظر.'),
+                                        ),
+                                      );
                                   }
                                 },
                               ),
@@ -645,19 +919,57 @@ class AdminReportsScreen extends ConsumerWidget {
                               final confirm = await showDialog<bool>(
                                 context: context,
                                 builder: (dialogCtx) => AlertDialog(
-                                  backgroundColor: isDark ? const Color(0xFF1A1D1E) : Colors.white,
-                                  title: Text('إغلاق التقرير', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
-                                  content: Text('هل تريد أرشفة/حذف هذا التقرير؟', style: TextStyle(color: isDark ? Colors.grey[300] : Colors.black87)),
+                                  backgroundColor: isDark
+                                      ? const Color(0xFF1A1D1E)
+                                      : Colors.white,
+                                  title: Text(
+                                    'إغلاق التقرير',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.white
+                                          : Colors.black,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    'هل تريد أرشفة/حذف هذا التقرير؟',
+                                    style: TextStyle(
+                                      color: isDark
+                                          ? Colors.grey[300]
+                                          : Colors.black87,
+                                    ),
+                                  ),
                                   actions: [
-                                    TextButton(onPressed: () => Navigator.pop(dialogCtx, false), child: const Text('إلغاء')),
-                                    TextButton(onPressed: () => Navigator.pop(dialogCtx, true), child: const Text('إغلاق', style: TextStyle(color: Colors.grey))),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogCtx, false),
+                                      child: const Text('إلغاء'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogCtx, true),
+                                      child: const Text(
+                                        'إغلاق',
+                                        style: TextStyle(color: Colors.grey),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               );
-                              if (confirm == true) await reportService.deleteReport(report['id']);
+                              if (confirm == true)
+                                await reportService.deleteReport(report['id']);
                             },
-                            icon: const Icon(Icons.check_circle_outline, size: 16, color: Colors.grey),
-                            label: const Text('إغلاق التقرير', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                            icon: const Icon(
+                              Icons.check_circle_outline,
+                              size: 16,
+                              color: Colors.grey,
+                            ),
+                            label: const Text(
+                              'إغلاق التقرير',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
                           ),
                         ],
                       ),

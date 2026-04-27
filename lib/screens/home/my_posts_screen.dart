@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/book.dart';
 import '../../providers/auth_provider.dart';
-import '../../providers/service_providers.dart';
 import '../../providers/book_provider.dart';
 import '../../widgets/book_card.dart';
 
@@ -14,7 +12,8 @@ class MyPostsScreen extends ConsumerWidget {
     final currentUser = ref.watch(authStateProvider).value;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    if (currentUser == null) return const Scaffold(body: Center(child: Text('يرجى تسجيل الدخول')));
+    if (currentUser == null)
+      return const Scaffold(body: Center(child: Text('يرجى تسجيل الدخول')));
 
     final postsAsync = ref.watch(myBooksProvider);
 
@@ -35,14 +34,19 @@ class MyPostsScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.library_books_outlined, 
-                      size: 64, 
-                      color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.grey[300]
+                      Icons.library_books_outlined,
+                      size: 64,
+                      color: isDark
+                          ? Colors.white.withValues(alpha: 0.1)
+                          : Colors.grey[300],
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'لم تقم بنشر أي كتاب بعد.',
-                      style: TextStyle(color: isDark ? Colors.grey[500] : Colors.grey, fontSize: 16),
+                      style: TextStyle(
+                        color: isDark ? Colors.grey[500] : Colors.grey,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -58,7 +62,8 @@ class MyPostsScreen extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('خطأ في تحميل البيانات: $err')),
+          error: (err, stack) =>
+              Center(child: Text('خطأ في تحميل البيانات: $err')),
         ),
       ),
     );

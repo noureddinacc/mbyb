@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'university_service.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -197,6 +198,49 @@ class AuthService {
   Future<void> logOut() async {
     try {
       await _firebaseAuth.signOut();
+    } on FirebaseAuthException {
+      rethrow;
+    }
+  }
+
+  /// Sign in with Microsoft (University Account)
+  Future<UserCredential> signInWithMicrosoft() async {
+    try {
+      final microsoftProvider = OAuthProvider('microsoft.com');
+      
+      // Request necessary scopes
+      microsoftProvider.setCustomParameters({
+        'prompt': 'select_account',
+      });
+      microsoftProvider.addScope('mail.read');
+      microsoftProvider.addScope('calendars.read');
+
+      final userCredential = await _firebaseAuth.signInWithProvider(microsoftProvider);
+
+      // Save/Update user profile in Firestore
+      if (userCredential.user != null) {
+        final user = userCredential.user!;
+        final email = user.email ?? '';
+        final studentId = email.split('@').first;
+        final domain = email.contains('@') ? email.split('@').last : '';
+
+        // Try to automatically link to university
+        String? universityId;
+        if (domain.isNotEmpty) {
+          final uniService = UniversityService();
+          final university = await uniService.getUniversityByDomain(domain);
+          universityId = university?.id;
+        }
+
+        await _firestore.collection('Users').doc(user.uid).set({
+          'email': email,
+          'studentID': studentId,
+          if (universityId != null) 'universityId': universityId,
+          'lastLogin': DateTime.now(),
+        }, SetOptions(merge: true));
+      }
+
+      return userCredential;
     } on FirebaseAuthException {
       rethrow;
     }
