@@ -115,9 +115,8 @@ Security is enforced server-side, not client-side:
 
 ---
 
-## Authors
+## Author
 
-- Noureddine Mahmoud Al-Issa · [github.com/noureddinacc](https://github.com/noureddinacc)
-- Muhannad Samer Al-Basha
+Noureddine Mahmoud Al-Issa · [github.com/noureddinacc](https://github.com/noureddinacc)
 
 Supervisor: Dr. Laith Abualigah · Al-al Bayt University, Jordan
